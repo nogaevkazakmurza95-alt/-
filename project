@@ -1,0 +1,552 @@
+import { useState, useEffect, useRef } from "react";
+
+/*
+  Гипсовая мастерская — каталог + панель мастера.
+
+  Данные хранятся в персистентном хранилище артефакта:
+  - "catalog-items" (shared: true)  — список копилок, виден всем посетителям
+  - "admin-credentials" (shared: true) — логин/пароль мастера (можно сменить в панели)
+
+  ВАЖНО: это клиентская проверка пароля внутри артефакта, а не настоящая
+  серверная авторизация. Она отлично подходит, чтобы отделить "витрину"
+  от "мастерской" на этом прототипе, но не защищает от человека, который
+  умеет читать код страницы. Для реального сайта с надёжной защитой
+  понадобится бэкенд.
+*/
+
+const DEFAULT_CREDENTIALS = { login: "master", password: "gips2026" };
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function StampBadge({ number }) {
+  return (
+    <div className="pgc-stamp" aria-hidden="true">
+      <span>ФОРМА</span>
+      <strong>№{String(number).padStart(3, "0")}</strong>
+    </div>
+  );
+}
+
+function RingMark() {
+  return (
+    <svg viewBox="0 0 240 240" className="pgc-ring-mark" aria-hidden="true">
+      <circle cx="120" cy="120" r="112" fill="none" stroke="var(--pgc-clay)" strokeWidth="1.5" opacity="0.35" />
+      <circle cx="120" cy="120" r="86" fill="none" stroke="var(--pgc-ink)" strokeWidth="1.5" opacity="0.5" />
+      <circle cx="120" cy="120" r="60" fill="none" stroke="var(--pgc-clay)" strokeWidth="2" opacity="0.7" />
+      <circle cx="120" cy="120" r="34" fill="var(--pgc-clay)" opacity="0.9" />
+      <circle cx="120" cy="120" r="34" fill="none" stroke="var(--pgc-ink)" strokeWidth="1" opacity="0.4" />
+    </svg>
+  );
+}
+
+export default function App() {
+  const [items, setItems] = useState([]);
+  const [credentials, setCredentials] = useState(DEFAULT_CREDENTIALS);
+  const [loading, setLoading] = useState(true);
+  const [storageError, setStorageError] = useState(false);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginForm, setLoginForm] = useState({ login: "", password: "" });
+  const [loginError, setLoginError] = useState("");
+
+  const [form, setForm] = useState({ name: "", price: "", description: "", image: "" });
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [showCredsForm, setShowCredsForm] = useState(false);
+  const [credsForm, setCredsForm] = useState({ login: "", password: "" });
+
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const itemsRes = await window.storage.get("catalog-items", true);
+        setItems(itemsRes ? JSON.parse(itemsRes.value) : []);
+      } catch (e) {
+        setItems([]);
+      }
+      try {
+        const credsRes = await window.storage.get("admin-credentials", true);
+        setCredentials(credsRes ? JSON.parse(credsRes.value) : DEFAULT_CREDENTIALS);
+      } catch (e) {
+        setCredentials(DEFAULT_CREDENTIALS);
+      }
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  async function persistItems(next) {
+    setItems(next);
+    try {
+      const res = await window.storage.set("catalog-items", JSON.stringify(next), true);
+      if (!res) setStorageError(true);
+    } catch (e) {
+      setStorageError(true);
+    }
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    if (loginForm.login === credentials.login && loginForm.password === credentials.password) {
+      setIsAdmin(true);
+      setShowLogin(false);
+      setLoginForm({ login: "", password: "" });
+      setLoginError("");
+    } else {
+      setLoginError("Неверный логин или пароль.");
+    }
+  }
+
+  function handleLogout() {
+    setIsAdmin(false);
+    setEditingId(null);
+    setForm({ name: "", price: "", description: "", image: "" });
+  }
+
+  async function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      alert("Файл слишком большой. Пожалуйста, выберите фото до 4 МБ.");
+      return;
+    }
+    const dataUrl = await readFileAsDataURL(file);
+    setForm((f) => ({ ...f, image: dataUrl }));
+  }
+
+  function startEdit(item) {
+    setEditingId(item.id);
+    setForm({ name: item.name, price: item.price, description: item.description, image: item.image });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetForm() {
+    setEditingId(null);
+    setForm({ name: "", price: "", description: "", image: "" });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.image) {
+      alert("Укажите название и загрузите фото копилки.");
+      return;
+    }
+    setSaving(true);
+    let next;
+    if (editingId) {
+      next = items.map((it) => (it.id === editingId ? { ...it, ...form } : it));
+    } else {
+      const nextNumber =
+        items.length > 0 ? Math.max(...items.map((it) => it.moldNumber || 0)) + 1 : 1;
+      next = [...items, { id: Date.now().toString(), moldNumber: nextNumber, ...form }];
+    }
+    await persistItems(next);
+    setSaving(false);
+    resetForm();
+  }
+
+  async function handleDelete(id) {
+    if (!confirm("Удалить эту копилку из каталога?")) return;
+    await persistItems(items.filter((it) => it.id !== id));
+    if (editingId === id) resetForm();
+  }
+
+  async function handleCredsSubmit(e) {
+    e.preventDefault();
+    if (!credsForm.login.trim() || !credsForm.password.trim()) return;
+    const next = { login: credsForm.login.trim(), password: credsForm.password };
+    setCredentials(next);
+    try {
+      await window.storage.set("admin-credentials", JSON.stringify(next), true);
+    } catch (e) {}
+    setShowCredsForm(false);
+    setCredsForm({ login: "", password: "" });
+  }
+
+  return (
+    <div className="pgc-root">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil:wght@500;700&family=Karla:wght@400;500;700&display=swap');
+
+        .pgc-root {
+          --pgc-bg: #ECE5D6;
+          --pgc-card: #F7F2E7;
+          --pgc-ink: #2B2924;
+          --pgc-clay: #A6684F;
+          --pgc-slate: #5B6B6F;
+          --pgc-line: #D8CFBD;
+          font-family: 'Karla', sans-serif;
+          background: var(--pgc-bg);
+          color: var(--pgc-ink);
+          min-height: 100vh;
+          background-image:
+            radial-gradient(circle at 15% 20%, rgba(166,104,79,0.06), transparent 40%),
+            radial-gradient(circle at 85% 75%, rgba(91,107,111,0.07), transparent 45%);
+        }
+        .pgc-root * { box-sizing: border-box; }
+        .pgc-display {
+          font-family: 'Big Shoulders Stencil', sans-serif;
+          letter-spacing: 0.02em;
+        }
+
+        .pgc-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 20px 28px; border-bottom: 1px solid var(--pgc-line);
+          flex-wrap: wrap; gap: 12px;
+        }
+        .pgc-logo { display: flex; align-items: center; gap: 12px; }
+        .pgc-logo-mark {
+          width: 40px; height: 40px; border-radius: 50%;
+          border: 2px solid var(--pgc-ink); display: flex; align-items: center; justify-content: center;
+          font-family: 'Big Shoulders Stencil', sans-serif; font-weight: 700; font-size: 15px;
+          transform: rotate(-6deg);
+        }
+        .pgc-logo-text { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1.3; }
+        .pgc-logo-text b { display: block; font-size: 15px; letter-spacing: 0.06em; }
+        .pgc-nav { display: flex; align-items: center; gap: 20px; font-size: 14px; }
+        .pgc-nav a, .pgc-nav button {
+          background: none; border: none; cursor: pointer; color: var(--pgc-ink);
+          font-family: 'Karla', sans-serif; font-size: 14px; padding: 8px 4px;
+        }
+        .pgc-nav-cta {
+          border: 1.5px solid var(--pgc-ink) !important; border-radius: 3px; padding: 8px 16px !important;
+        }
+        .pgc-nav-cta:hover { background: var(--pgc-ink); color: var(--pgc-card); }
+
+        .pgc-hero {
+          display: grid; grid-template-columns: 1.3fr 0.8fr; align-items: center;
+          padding: 56px 28px; gap: 32px; max-width: 1180px; margin: 0 auto;
+        }
+        .pgc-hero h1 {
+          font-size: clamp(38px, 6vw, 68px); line-height: 0.98; margin: 0 0 18px;
+          text-transform: uppercase;
+        }
+        .pgc-hero p { font-size: 17px; line-height: 1.55; max-width: 46ch; color: #4a463d; }
+        .pgc-ring-mark { width: 100%; max-width: 260px; justify-self: center; }
+
+        .pgc-section-label {
+          display: flex; align-items: center; gap: 12px; margin: 0 28px 22px;
+          max-width: 1124px; margin-left: auto; margin-right: auto;
+        }
+        .pgc-section-label .line { flex: 1; height: 1px; background: var(--pgc-line); }
+        .pgc-section-label span {
+          font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--pgc-slate);
+        }
+
+        .pgc-grid {
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          gap: 22px; padding: 0 28px 64px; max-width: 1180px; margin: 0 auto;
+        }
+        .pgc-card {
+          background: var(--pgc-card); border: 1px solid var(--pgc-line); border-radius: 4px;
+          overflow: hidden; position: relative; display: flex; flex-direction: column;
+          box-shadow: 0 1px 0 rgba(43,41,36,0.04);
+        }
+        .pgc-card-photo {
+          width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block;
+          border-bottom: 1px solid var(--pgc-line); background: #ddd6c6;
+        }
+        .pgc-stamp {
+          position: absolute; top: 10px; left: 10px; background: rgba(247,242,231,0.92);
+          border: 1.5px solid var(--pgc-ink); border-radius: 50%;
+          width: 60px; height: 60px; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; transform: rotate(-8deg);
+          font-family: 'Big Shoulders Stencil', sans-serif; line-height: 1.05;
+        }
+        .pgc-stamp span { font-size: 7px; letter-spacing: 0.1em; }
+        .pgc-stamp strong { font-size: 13px; }
+        .pgc-card-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+        .pgc-card-body h3 { margin: 0; font-size: 17px; }
+        .pgc-card-body .pgc-price { color: var(--pgc-clay); font-weight: 700; font-size: 15px; }
+        .pgc-card-body p { margin: 0; font-size: 13.5px; color: #5c584e; line-height: 1.4; }
+        .pgc-card-admin-row { display: flex; gap: 8px; margin-top: 10px; }
+        .pgc-mini-btn {
+          font-size: 12px; padding: 6px 10px; border-radius: 3px; cursor: pointer;
+          border: 1px solid var(--pgc-line); background: transparent; font-family: 'Karla', sans-serif;
+        }
+        .pgc-mini-btn.danger { border-color: #b3554080; color: var(--pgc-clay); }
+        .pgc-mini-btn:hover { border-color: var(--pgc-ink); }
+
+        .pgc-empty {
+          max-width: 1124px; margin: 0 auto 64px; padding: 48px 28px; text-align: center;
+          border: 1px dashed var(--pgc-line); border-radius: 4px; color: #6b665a;
+        }
+
+        .pgc-overlay {
+          position: fixed; inset: 0; background: rgba(43,41,36,0.55);
+          display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+        }
+        .pgc-modal {
+          background: var(--pgc-card); border-radius: 6px; padding: 30px; width: 100%; max-width: 380px;
+          border: 1px solid var(--pgc-line);
+        }
+        .pgc-modal h2 { margin: 0 0 4px; font-size: 22px; }
+        .pgc-modal .pgc-sub { font-size: 13px; color: #6b665a; margin: 0 0 20px; }
+        .pgc-field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+        .pgc-field label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--pgc-slate); }
+        .pgc-field input, .pgc-field textarea {
+          border: 1px solid var(--pgc-line); border-radius: 3px; padding: 10px 12px;
+          font-family: 'Karla', sans-serif; font-size: 14px; background: #fff;
+        }
+        .pgc-field textarea { resize: vertical; min-height: 70px; }
+        .pgc-error { color: var(--pgc-clay); font-size: 13px; margin: -6px 0 12px; }
+        .pgc-btn {
+          width: 100%; padding: 11px; border-radius: 3px; border: none; cursor: pointer;
+          background: var(--pgc-ink); color: var(--pgc-card); font-family: 'Karla', sans-serif;
+          font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
+        }
+        .pgc-btn:hover { background: var(--pgc-clay); }
+        .pgc-btn:disabled { opacity: 0.6; cursor: default; }
+        .pgc-link-btn {
+          background: none; border: none; color: var(--pgc-slate); font-size: 12.5px;
+          cursor: pointer; text-decoration: underline; padding: 0; margin-top: 14px; font-family: 'Karla', sans-serif;
+        }
+
+        .pgc-admin-bar {
+          background: var(--pgc-ink); color: var(--pgc-card); padding: 10px 28px;
+          display: flex; justify-content: space-between; align-items: center; font-size: 13px; flex-wrap: wrap; gap: 8px;
+        }
+        .pgc-admin-bar-actions { display: flex; gap: 14px; align-items: center; }
+        .pgc-admin-bar button {
+          background: none; border: 1px solid var(--pgc-card); color: var(--pgc-card);
+          border-radius: 3px; padding: 5px 12px; cursor: pointer; font-family: 'Karla', sans-serif; font-size: 12px;
+        }
+
+        .pgc-panel {
+          max-width: 1180px; margin: 0 auto; padding: 28px 28px 8px;
+        }
+        .pgc-panel-form {
+          background: var(--pgc-card); border: 1px solid var(--pgc-line); border-radius: 5px;
+          padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px;
+        }
+        .pgc-panel-form h2 { grid-column: 1 / -1; margin: 0 0 4px; font-size: 20px; }
+        .pgc-panel-form .pgc-full { grid-column: 1 / -1; }
+        .pgc-file-preview {
+          width: 100px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid var(--pgc-line);
+          margin-top: 8px;
+        }
+        .pgc-form-actions { grid-column: 1 / -1; display: flex; gap: 10px; }
+        .pgc-form-actions .pgc-btn { width: auto; padding: 10px 22px; }
+        .pgc-form-actions .pgc-mini-btn { align-self: center; }
+
+        .pgc-footer {
+          text-align: center; padding: 36px 28px 48px; font-size: 12.5px; color: #7a7566;
+          border-top: 1px solid var(--pgc-line); margin-top: 16px;
+        }
+        .pgc-footer button { background: none; border: none; text-decoration: underline; cursor: pointer; color: #7a7566; font-family: 'Karla', sans-serif; }
+
+        @media (max-width: 760px) {
+          .pgc-hero { grid-template-columns: 1fr; padding-top: 36px; }
+          .pgc-ring-mark { max-width: 160px; }
+          .pgc-panel-form { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
+      <header className="pgc-header">
+        <div className="pgc-logo">
+          <div className="pgc-logo-mark">ГК</div>
+          <div className="pgc-logo-text">
+            <b>Гипсовая мастерская</b>
+            копилки ручной отливки
+          </div>
+        </div>
+        <nav className="pgc-nav">
+          <a href="#catalog">Каталог</a>
+          {isAdmin ? (
+            <button className="pgc-nav-cta" onClick={handleLogout}>Выйти</button>
+          ) : (
+            <button className="pgc-nav-cta" onClick={() => setShowLogin(true)}>Вход для мастера</button>
+          )}
+        </nav>
+      </header>
+
+      {isAdmin && (
+        <div className="pgc-admin-bar">
+          <span>Режим мастера — изменения видят все посетители сайта.</span>
+          <div className="pgc-admin-bar-actions">
+            <button onClick={() => setShowCredsForm(true)}>Сменить логин/пароль</button>
+            <button onClick={handleLogout}>Выйти</button>
+          </div>
+        </div>
+      )}
+
+      <section className="pgc-hero">
+        <div>
+          <h1 className="pgc-display">Гипсовые копилки, отлитые вручную</h1>
+          <p>
+            Каждая форма отливается и расписывается вручную, поэтому у копилок нет двух
+            одинаковых. Смотрите каталог — фото и цены мастер обновляет сам, прямо с этой страницы.
+          </p>
+        </div>
+        <RingMark />
+      </section>
+
+      <div className="pgc-section-label" id="catalog">
+        <span>Каталог</span>
+        <div className="line" />
+      </div>
+
+      {loading ? (
+        <div className="pgc-empty">Загружаем каталог…</div>
+      ) : items.length === 0 ? (
+        <div className="pgc-empty">
+          {isAdmin
+            ? "Пока в каталоге пусто. Добавьте первую копилку через форму ниже."
+            : "Мастер скоро добавит фотографии копилок — загляните позже."}
+        </div>
+      ) : (
+        <div className="pgc-grid">
+          {items.map((item) => (
+            <div className="pgc-card" key={item.id}>
+              <StampBadge number={item.moldNumber} />
+              <img className="pgc-card-photo" src={item.image} alt={item.name} />
+              <div className="pgc-card-body">
+                <h3>{item.name}</h3>
+                {item.price && <div className="pgc-price">{item.price}</div>}
+                {item.description && <p>{item.description}</p>}
+                {isAdmin && (
+                  <div className="pgc-card-admin-row">
+                    <button className="pgc-mini-btn" onClick={() => startEdit(item)}>Изменить</button>
+                    <button className="pgc-mini-btn danger" onClick={() => handleDelete(item.id)}>Удалить</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isAdmin && (
+        <div className="pgc-panel">
+          <div className="pgc-section-label">
+            <span>Панель мастера</span>
+            <div className="line" />
+          </div>
+          <form className="pgc-panel-form" onSubmit={handleSubmit}>
+            <h2>{editingId ? "Изменить копилку" : "Добавить новую копилку"}</h2>
+
+            <div className="pgc-field">
+              <label>Название</label>
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Например, «Кот-копилка»"
+              />
+            </div>
+            <div className="pgc-field">
+              <label>Цена</label>
+              <input
+                value={form.price}
+                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                placeholder="Например, 1200 ₽"
+              />
+            </div>
+            <div className="pgc-field pgc-full">
+              <label>Описание</label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Размер, цвет, особенности росписи…"
+              />
+            </div>
+            <div className="pgc-field pgc-full">
+              <label>Фото</label>
+              <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} />
+              {form.image && <img src={form.image} alt="Предпросмотр" className="pgc-file-preview" />}
+            </div>
+
+            <div className="pgc-form-actions">
+              <button className="pgc-btn" type="submit" disabled={saving} style={{ width: "auto" }}>
+                {saving ? "Сохраняем…" : editingId ? "Сохранить изменения" : "Добавить в каталог"}
+              </button>
+              {editingId && (
+                <button type="button" className="pgc-mini-btn" onClick={resetForm}>Отменить</button>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
+
+      {storageError && (
+        <div className="pgc-empty" style={{ maxWidth: 1124, margin: "0 auto 40px" }}>
+          Не удалось сохранить изменения. Попробуйте ещё раз через минуту.
+        </div>
+      )}
+
+      <footer className="pgc-footer">
+        Гипсовая мастерская · сделано вручную · {isAdmin ? "вы вошли как мастер" : (
+          <button onClick={() => setShowLogin(true)}>вход для мастера</button>
+        )}
+      </footer>
+
+      {showLogin && (
+        <div className="pgc-overlay" onClick={() => setShowLogin(false)}>
+          <div className="pgc-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="pgc-display">Вход мастера</h2>
+            <p className="pgc-sub">Логин и пароль от панели управления каталогом.</p>
+            <form onSubmit={handleLogin}>
+              <div className="pgc-field">
+                <label>Логин</label>
+                <input
+                  value={loginForm.login}
+                  onChange={(e) => setLoginForm((f) => ({ ...f, login: e.target.value }))}
+                  autoFocus
+                />
+              </div>
+              <div className="pgc-field">
+                <label>Пароль</label>
+                <input
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
+                />
+              </div>
+              {loginError && <div className="pgc-error">{loginError}</div>}
+              <button className="pgc-btn" type="submit">Войти</button>
+            </form>
+            <button className="pgc-link-btn" onClick={() => setShowLogin(false)}>Закрыть</button>
+          </div>
+        </div>
+      )}
+
+      {showCredsForm && (
+        <div className="pgc-overlay" onClick={() => setShowCredsForm(false)}>
+          <div className="pgc-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="pgc-display">Новый логин и пароль</h2>
+            <p className="pgc-sub">Текущий логин: {credentials.login}</p>
+            <form onSubmit={handleCredsSubmit}>
+              <div className="pgc-field">
+                <label>Новый логин</label>
+                <input
+                  value={credsForm.login}
+                  onChange={(e) => setCredsForm((f) => ({ ...f, login: e.target.value }))}
+                  autoFocus
+                />
+              </div>
+              <div className="pgc-field">
+                <label>Новый пароль</label>
+                <input
+                  type="password"
+                  value={credsForm.password}
+                  onChange={(e) => setCredsForm((f) => ({ ...f, password: e.target.value }))}
+                />
+              </div>
+              <button className="pgc-btn" type="submit">Сохранить</button>
+            </form>
+            <button className="pgc-link-btn" onClick={() => setShowCredsForm(false)}>Закрыть</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
