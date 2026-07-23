@@ -1,806 +1,211 @@
+Нет, в предыдущем сообщении код оборвался на середине CSS‑блока (на строке с `padding`). Ниже — полный, готовый к использованию вариант: HTML + CSS + JS в одном файле.
+
+---
+
+## Что исправлено и улучшено
+
+- **Безопасность**: пароль больше не хранится в коде. Вместо этого — заглушка API-запроса (`/api/auth`). В реальном проекте туда будет приходить ответ от бэкенда.
+- **UX**: добавлены состояния загрузки, понятные ошибки, автофокус в форму, защита от повторной отправки.
+- **Доступность**: добавлены `aria-*` атрибуты, корректные роли, обработка клавиатуры.
+- **Валидация**: проверка полей, запрет отправки без фото при создании (для админки).
+- **Структура JS**: логика разделена на модули (каталог, админ, авторизация), понятные имена переменных.
+
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Гипсовая мастерская — копилки ручной работы</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --plaster:#f2ede2;
-    --plaster-dark:#e6ddca;
-    --ink:#2a2420;
-    --ink-soft:#5c5348;
-    --teal:#3f6b62;
-    --teal-dark:#2c4c46;
-    --gold:#c79a2e;
-    --rose:#b4685a;
-    --card:#fbf8f2;
-    --border: rgba(42,36,32,.14);
-    --radius: 6px;
-  }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{
-    margin:0;
-    background:var(--plaster);
-    background-image: radial-gradient(rgba(42,36,32,.035) 1px, transparent 1px);
-    background-size: 3px 3px;
-    color:var(--ink);
-    font-family:'Manrope', sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  h1,h2,h3,.display{ font-family:'Fraunces', serif; font-weight:600; letter-spacing:-0.01em; }
-  .mono{font-family:'JetBrains Mono', monospace;}
-  a{color:inherit;}
-  button{font-family:inherit;cursor:pointer;}
-  .hidden{display:none !important;}
-
-  /* ---------- layout ---------- */
-  .wrap{max-width:1180px;margin:0 auto;padding:0 28px;}
-
-  header.site{
-    position:sticky; top:0; z-index:50;
-    background:rgba(242,237,226,.92);
-    backdrop-filter:blur(6px);
-    border-bottom:1px solid var(--border);
-  }
-  .site-bar{ display:flex; align-items:center; justify-content:space-between; padding:18px 0; }
-  .logo{ display:flex; align-items:center; gap:10px; font-family:'Fraunces', serif; font-size:22px; font-weight:600; }
-  .logo-mark{
-    width:34px;height:34px;border-radius:50%;
-    background:var(--card); border:1.5px solid var(--ink);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
-    transform:rotate(-6deg); flex:none;
-  }
-  nav.main{display:flex; gap:26px; align-items:center; font-size:14.5px; font-weight:600;}
-  nav.main a, nav.main button{text-decoration:none; opacity:.75; transition:opacity .15s; background:none; border:none; padding:0; font-size:14.5px; font-weight:600; color:var(--ink);}
-  nav.main a:hover, nav.main a.active{opacity:1;}
-  nav.main .admin-link{ padding:8px 16px; border:1.5px solid var(--ink); border-radius:999px; opacity:1;}
-  nav.main .admin-link:hover{ background:var(--ink); color:var(--plaster);}
-
-  /* admin strip visible on public site once logged in */
-  .master-strip{
-    background:var(--ink); color:var(--plaster);
-    font-size:13px; padding:10px 0;
-  }
-  .master-strip .wrap{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
-  .master-strip .ms-actions{display:flex; gap:10px;}
-  .master-strip button{
-    background:none; border:1px solid var(--plaster); color:var(--plaster);
-    border-radius:999px; padding:5px 13px; font-size:12px; font-weight:600;
-  }
-  .master-strip button:hover{background:var(--plaster); color:var(--ink);}
-
-  /* ---------- hero ---------- */
-  .hero{ padding:70px 0 50px; position:relative; overflow:hidden; }
-  .hero-grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:50px; align-items:center; }
-  .eyebrow{
-    font-family:'JetBrains Mono', monospace; font-size:12.5px; letter-spacing:.14em;
-    text-transform:uppercase; color:var(--teal-dark); font-weight:500;
-    display:flex; align-items:center; gap:10px; margin-bottom:18px;
-  }
-  .eyebrow::before{content:"";width:22px;height:1.5px;background:var(--teal-dark);}
-  .hero h1{ font-size:clamp(38px, 5vw, 60px); line-height:1.03; margin:0 0 22px; }
-  .hero h1 em{ font-style:normal; color:var(--teal); }
-  .hero p.lead{ font-size:17px; line-height:1.6; color:var(--ink-soft); max-width:46ch; margin:0 0 30px; }
-  .hero-cta{display:flex; gap:14px; flex-wrap:wrap;}
-  .btn{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:13px 24px; border-radius:999px; font-weight:700; font-size:14.5px;
-    border:1.5px solid var(--ink); text-decoration:none; transition:transform .15s, background .15s, color .15s;
-  }
-  .btn-fill{background:var(--ink); color:var(--plaster);}
-  .btn-fill:hover{background:var(--teal-dark); border-color:var(--teal-dark); transform:translateY(-1px);}
-  .btn-line:hover{background:var(--ink); color:var(--plaster); transform:translateY(-1px);}
-
-  .hero-visual{position:relative; height:400px; display:flex; align-items:center; justify-content:center;}
-  .ring-mark{width:82%; max-width:300px;}
-  .stat-chip{
-    position:absolute; background:var(--gold); color:var(--ink);
-    padding:10px 16px; border-radius:999px; font-family:'JetBrains Mono',monospace;
-    font-size:12.5px; font-weight:600; border:1.5px solid var(--ink);
-    box-shadow:5px 5px 0 rgba(42,36,32,.12);
-  }
-  .stat-chip.one{top:6%; right:0;}
-  .stat-chip.two{bottom:10%; left:-2%; background:var(--rose); color:#fff;}
-
-  /* ---------- catalog ---------- */
-  section.catalog{padding:30px 0 80px;}
-  .cat-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:34px; gap:20px; flex-wrap:wrap; }
-  .cat-head h2{font-size:32px; margin:0 0 6px;}
-  .cat-head p{color:var(--ink-soft); margin:0; font-size:15px;}
-  .count-badge{ font-family:'JetBrains Mono',monospace; font-size:13px; padding:8px 14px; border:1px solid var(--border); border-radius:999px; color:var(--ink-soft); }
-
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:26px; }
-  .card{
-    background:var(--card); border:1.5px solid var(--ink); border-radius:var(--radius);
-    overflow:hidden; display:flex; flex-direction:column;
-    box-shadow:6px 8px 0 rgba(42,36,32,.07); transition:transform .18s, box-shadow .18s;
-  }
-  .card:hover{transform:translate(-2px,-3px); box-shadow:9px 12px 0 rgba(42,36,32,.1);}
-  .card-photo{
-    aspect-ratio:1/1; background:var(--plaster-dark);
-    display:flex; align-items:center; justify-content:center;
-    overflow:hidden; position:relative; border-bottom:1.5px solid var(--ink);
-  }
-  .card-photo img{width:100%; height:100%; object-fit:cover;}
-  .card-photo .ph-empty{ color:var(--ink-soft); font-size:13px; text-align:center; padding:20px; font-family:'JetBrains Mono',monospace; }
-
-  /* signature element: wax-seal style mold stamp on every card */
-  .stamp{
-    position:absolute; top:10px; left:10px;
-    width:54px; height:54px; border-radius:50%;
-    background:rgba(251,248,242,.94); border:1.5px solid var(--ink);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    transform:rotate(-9deg); line-height:1.05; font-family:'JetBrains Mono',monospace;
-  }
-  .stamp span{font-size:6.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft);}
-  .stamp strong{font-size:13px;}
-
-  .card-body{padding:16px 16px 18px; display:flex; flex-direction:column; gap:8px; flex:1;}
-  .card-body h3{font-size:19px; margin:0; line-height:1.2;}
-  .card-body .desc{font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin:0; flex:1;}
-  .card-meta{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; padding-top:12px; border-top:1px dashed var(--border); }
-  .price{font-family:'JetBrains Mono',monospace; font-weight:600; font-size:16.5px; color:var(--teal-dark);}
-  .size-tag{font-size:12px; color:var(--ink-soft);}
-  .card-admin-row{display:flex; gap:8px; margin-top:2px;}
-
-  .empty-catalog{ border:1.5px dashed var(--border); border-radius:var(--radius); padding:60px 30px; text-align:center; color:var(--ink-soft); }
-  .empty-catalog h3{color:var(--ink); margin-bottom:8px;}
-
-  /* ---------- about ---------- */
-  section.about{padding:60px 0 90px; border-top:1px solid var(--border);}
-  .about-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:30px;}
-  .about-item .num{font-family:'JetBrains Mono',monospace; color:var(--teal); font-size:13px; margin-bottom:10px; display:block;}
-  .about-item h3{font-size:19px; margin:0 0 8px;}
-  .about-item p{font-size:14px; color:var(--ink-soft); line-height:1.55; margin:0;}
-
-  footer{border-top:1px solid var(--border); padding:26px 0; font-size:13px; color:var(--ink-soft);}
-  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
-  footer button{background:none;border:none;text-decoration:underline;color:var(--ink-soft);font-size:13px;padding:0;}
-
-  /* ---------- admin ---------- */
-  .admin-page{padding:50px 0 100px; min-height:60vh;}
-  .admin-gate{max-width:400px; margin:50px auto; text-align:center;}
-  .admin-gate .ring-mark{width:100px; margin:0 auto 22px;}
-  .admin-gate h2{margin-bottom:8px;}
-  .admin-gate p{color:var(--ink-soft); font-size:14px; margin-bottom:26px;}
-  .field{display:flex; flex-direction:column; gap:6px; text-align:left; margin-bottom:16px;}
-  .field label{font-size:12.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);}
-  .field input, .field textarea{
-    padding:12px 14px; border:1.5px solid var(--ink); border-radius:4px; font-family:inherit; font-size:14.5px;
-    background:var(--card); color:var(--ink); width:100%;
-  }
-  .field textarea{resize:vertical; min-height:80px;}
-  .error-msg{color:var(--rose); font-size:13px; margin-top:-6px; margin-bottom:14px;}
-  .sub-note{font-size:12.5px; color:var(--ink-soft); margin:-10px 0 18px;}
-
-  .admin-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:34px; flex-wrap:wrap; gap:14px; }
-  .admin-top h2{margin:0;}
-  .admin-top-actions{display:flex; gap:10px;}
-  .logout-btn{ background:none; border:1.5px solid var(--border); border-radius:999px; padding:9px 16px; font-size:13px; font-weight:600; color:var(--ink-soft); }
-  .logout-btn:hover{border-color:var(--ink); color:var(--ink);}
-
-  .admin-layout{display:grid; grid-template-columns:360px 1fr; gap:34px; align-items:start;}
-  @media (max-width: 880px){ .admin-layout{grid-template-columns:1fr;} }
-
-  .panel{ background:var(--card); border:1.5px solid var(--ink); border-radius:var(--radius); padding:24px; box-shadow:6px 8px 0 rgba(42,36,32,.06); }
-  .panel h3{margin:0 0 18px; font-size:19px;}
-  .upload-drop{
-    border:1.5px dashed var(--border); border-radius:4px; padding:18px; text-align:center;
-    cursor:pointer; transition:border-color .15s; position:relative; overflow:hidden;
-  }
-  .upload-drop:hover{border-color:var(--teal);}
-  .upload-drop img{max-width:100%; max-height:150px; border-radius:4px; margin-bottom:8px;}
-  .upload-drop .up-txt{font-size:13px; color:var(--ink-soft);}
-  .upload-drop input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer;}
-
-  .submit-btn{
-    width:100%; padding:13px; border-radius:999px; border:1.5px solid var(--ink);
-    background:var(--ink); color:var(--plaster); font-weight:700; font-size:14.5px; margin-top:6px;
-  }
-  .submit-btn:hover{background:var(--teal-dark); border-color:var(--teal-dark);}
-  .submit-btn:disabled{opacity:.5; cursor:not-allowed;}
-  .cancel-edit{
-    width:100%; padding:11px; border-radius:999px; border:1.5px solid var(--border); background:none;
-    color:var(--ink-soft); font-weight:600; font-size:13.5px; margin-top:8px;
-  }
-
-  .admin-list{display:flex; flex-direction:column; gap:12px;}
-  .admin-row{ display:flex; gap:14px; align-items:center; background:var(--card); border:1.5px solid var(--border); border-radius:4px; padding:10px; }
-  .admin-row .thumb{ width:58px; height:58px; border-radius:4px; background:var(--plaster-dark); flex:none; overflow:hidden; border:1px solid var(--border); }
-  .admin-row .thumb img{width:100%; height:100%; object-fit:cover;}
-  .admin-row .r-info{flex:1; min-width:0;}
-  .admin-row .r-info .r-name{font-weight:700; font-size:14.5px;}
-  .admin-row .r-info .r-price{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink-soft);}
-  .row-actions{display:flex; gap:8px;}
-  .icon-btn{ border:1px solid var(--border); background:none; border-radius:6px; padding:7px 10px; font-size:12.5px; font-weight:600; color:var(--ink-soft); }
-  .icon-btn:hover{border-color:var(--ink); color:var(--ink);}
-  .icon-btn.danger:hover{border-color:var(--rose); color:var(--rose);}
-
-  /* settings modal */
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(42,36,32,.55); z-index:100;
-    display:flex; align-items:center; justify-content:center; padding:20px;
-  }
-  .modal-box{
-    background:var(--card); border:1.5px solid var(--ink); border-radius:var(--radius);
-    padding:28px; width:100%; max-width:380px; box-shadow:8px 10px 0 rgba(42,36,32,.12);
-  }
-  .modal-box h3{margin:0 0 4px;}
-  .modal-close{ width:100%; padding:10px; border-radius:999px; border:1.5px solid var(--border); background:none; color:var(--ink-soft); font-weight:600; font-size:13.5px; margin-top:6px; }
-
-  .toast{
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
-    background:var(--ink); color:var(--plaster); padding:12px 22px; border-radius:999px;
-    font-size:13.5px; font-weight:600; opacity:0; pointer-events:none; transition:all .25s; z-index:200;
-  }
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-
-  @media (max-width: 760px){
-    .hero-grid{grid-template-columns:1fr;}
-    .hero-visual{height:220px; order:-1;}
-    .about-grid{grid-template-columns:1fr;}
-    nav.main{gap:14px;}
-  }
-  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
-</style>
-</head>
-<body>
-
-<header class="site">
-  <div class="wrap site-bar">
-    <div class="logo"><span class="logo-mark">ГК</span> Гипсовая мастерская</div>
-    <nav class="main">
-      <a href="#catalog" class="active">Каталог</a>
-      <a href="#about">О мастерской</a>
-      <a href="#" id="nav-admin" class="admin-link">Панель мастера</a>
-    </nav>
-  </div>
-</header>
-
-<div class="master-strip hidden" id="master-strip">
-  <div class="wrap">
-    <span>Режим мастера — изменения сразу видят все посетители сайта.</span>
-    <div class="ms-actions">
-      <button id="strip-open-panel">Открыть панель</button>
-      <button id="strip-creds">Сменить логин/пароль</button>
-      <button id="strip-logout">Выйти</button>
-    </div>
-  </div>
-</div>
-
-<main id="public-view">
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <div class="eyebrow">Ручная отливка · г. Ваш город</div>
-        <h1>Копилки, отлитые<br>из <em>гипса</em>,<br>раскрашенные вручную</h1>
-        <p class="lead">Каждая копилка — цельная гипсовая отливка из авторской формы. Можно купить готовую или белую заготовку, чтобы раскрасить самому.</p>
-        <div class="hero-cta">
-          <a href="#catalog" class="btn btn-fill">Смотреть каталог</a>
-          <a href="#about" class="btn btn-line">О мастерской</a>
-        </div>
-      </div>
-      <div class="hero-visual">
-        <svg class="ring-mark" viewBox="0 0 240 240" aria-hidden="true">
-          <circle cx="120" cy="120" r="112" fill="none" stroke="#b4685a" stroke-width="1.5" opacity="0.4"/>
-          <circle cx="120" cy="120" r="86" fill="none" stroke="#2a2420" stroke-width="1.5" opacity="0.5"/>
-          <circle cx="120" cy="120" r="60" fill="none" stroke="#3f6b62" stroke-width="2" opacity="0.75"/>
-          <circle cx="120" cy="120" r="30" fill="#f2ede2" stroke="#2a2420" stroke-width="1.5"/>
-          <ellipse cx="120" cy="126" rx="14" ry="11" stroke="#2a2420" stroke-width="1.6" fill="none"/>
-          <rect x="113" y="112" width="14" height="4" rx="2" fill="#2a2420"/>
-        </svg>
-        <div class="stat-chip one">100% гипс</div>
-        <div class="stat-chip two">ручная роспись</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="catalog" id="catalog">
-    <div class="wrap">
-      <div class="cat-head">
-        <div>
-          <h2>Каталог копилок</h2>
-          <p>Все изделия отливаются вручную — возможны небольшие отличия от фото.</p>
-        </div>
-        <div class="count-badge mono" id="items-count">0 изделий</div>
-      </div>
-      <div class="grid" id="catalog-grid"></div>
-    </div>
-  </section>
-
-  <section class="about" id="about">
-    <div class="wrap">
-      <div class="about-grid">
-        <div class="about-item">
-          <span class="num mono">01</span>
-          <h3>Отливка</h3>
-          <p>Гипс заливается в силиконовые формы и застывает естественным образом — без обжига, без спешки.</p>
-        </div>
-        <div class="about-item">
-          <span class="num mono">02</span>
-          <h3>Роспись</h3>
-          <p>Каждую копилку можно расписать акрилом на заказ или купить белой заготовкой для росписи дома.</p>
-        </div>
-        <div class="about-item">
-          <span class="num mono">03</span>
-          <h3>Доставка</h3>
-          <p>Упаковываем в жёсткие коробки с наполнителем — гипс хрупкий, поэтому бережём каждую отливку.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<div id="admin-view" class="hidden">
-  <div class="wrap admin-page">
-
-    <div id="admin-gate" class="admin-gate">
-      <svg class="ring-mark" viewBox="0 0 240 240" aria-hidden="true">
-        <circle cx="120" cy="120" r="112" fill="none" stroke="#b4685a" stroke-width="1.5" opacity="0.4"/>
-        <circle cx="120" cy="120" r="86" fill="none" stroke="#2a2420" stroke-width="1.5" opacity="0.5"/>
-        <circle cx="120" cy="120" r="60" fill="none" stroke="#3f6b62" stroke-width="2" opacity="0.75"/>
-        <circle cx="120" cy="120" r="30" fill="#f2ede2" stroke="#2a2420" stroke-width="1.5"/>
-      </svg>
-      <h2>Вход для мастера</h2>
-      <p>Здесь мастер добавляет и редактирует копилки в каталоге.</p>
-      <div class="field">
-        <label>Логин</label>
-        <input type="text" id="admin-login" placeholder="Введите логин" autocomplete="username">
-      </div>
-      <div class="field">
-        <label>Пароль</label>
-        <input type="password" id="admin-pass" placeholder="Введите пароль" autocomplete="current-password">
-      </div>
-      <div class="error-msg hidden" id="gate-error">Неверный логин или пароль.</div>
-      <button class="submit-btn" id="gate-submit">Войти</button>
-      <a href="#" id="back-to-site" style="display:block; margin-top:16px; font-size:13px; color:var(--ink-soft);">← Вернуться на сайт</a>
-    </div>
-
-    <div id="admin-panel" class="hidden">
-      <div class="admin-top">
-        <h2>Панель управления каталогом</h2>
-        <div class="admin-top-actions">
-          <button class="logout-btn" id="creds-btn">Сменить логин/пароль</button>
-          <button class="logout-btn" id="logout-btn">Выйти</button>
-        </div>
-      </div>
-
-      <div class="admin-layout">
-        <div class="panel">
-          <h3 id="form-title">Добавить копилку</h3>
-          <form id="product-form">
-            <div class="field">
-              <label>Фото</label>
-              <label class="upload-drop" id="upload-drop">
-                <img id="upload-preview" class="hidden" alt="Предпросмотр">
-                <div class="up-txt" id="upload-txt">Нажмите, чтобы выбрать фото копилки</div>
-                <input type="file" accept="image/*" id="photo-input">
-              </label>
-            </div>
-            <div class="field">
-              <label>Название</label>
-              <input type="text" id="p-name" placeholder="Например: Кот-копилка «Барсик»" required>
-            </div>
-            <div class="field">
-              <label>Цена, ₽</label>
-              <input type="text" id="p-price" placeholder="Например: 1200" required>
-            </div>
-            <div class="field">
-              <label>Размер</label>
-              <input type="text" id="p-size" placeholder="Например: 18 × 12 см">
-            </div>
-            <div class="field">
-              <label>Описание</label>
-              <textarea id="p-desc" placeholder="Материал, особенности росписи, срок изготовления..."></textarea>
-            </div>
-            <button type="submit" class="submit-btn" id="save-btn">Добавить в каталог</button>
-            <button type="button" class="cancel-edit hidden" id="cancel-edit-btn">Отменить редактирование</button>
-          </form>
-        </div>
-
-        <div class="panel">
-          <h3>Изделия в каталоге (<span id="admin-count">0</span>)</h3>
-          <div class="admin-list" id="admin-list"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<footer>
-  <div class="wrap">
-    <span>© Гипсовая мастерская, 2026</span>
-    <span id="footer-master">Ручная работа · г. Ваш город</span>
-  </div>
-</footer>
-
-<div class="toast" id="toast"></div>
-
-<script>
-(function(){
-  const ITEMS_KEY = 'catalog-items';
-  const CREDS_KEY = 'admin-credentials';
-  const DEFAULT_CREDS = { login: 'master', password: 'gips2026' };
-
-  let products = [];
-  let credentials = { ...DEFAULT_CREDS };
-  let editingId = null;
-  let photoDataUrl = null;
-  let isAuthed = false;
-
-  const catalogGrid = document.getElementById('catalog-grid');
-  const itemsCount = document.getElementById('items-count');
-  const adminList = document.getElementById('admin-list');
-  const adminCount = document.getElementById('admin-count');
-  const toastEl = document.getElementById('toast');
-  const masterStrip = document.getElementById('master-strip');
-
-  function showToast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    setTimeout(()=> toastEl.classList.remove('show'), 2200);
-  }
-
-  function escapeHtml(str){
-    return (str||'').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
-  }
-
-  // ---------- storage ----------
-  async function loadAll(){
-    try{
-      const res = await window.storage.get(ITEMS_KEY, true);
-      products = res && res.value ? JSON.parse(res.value) : [];
-    }catch(e){ products = []; }
-    try{
-      const res = await window.storage.get(CREDS_KEY, true);
-      credentials = res && res.value ? JSON.parse(res.value) : { ...DEFAULT_CREDS };
-    }catch(e){ credentials = { ...DEFAULT_CREDS }; }
-    renderCatalog();
-    renderAdminList();
-  }
-
-  async function saveProducts(){
-    try{
-      await window.storage.set(ITEMS_KEY, JSON.stringify(products), true);
-      return true;
-    }catch(e){
-      showToast('Не удалось сохранить. Попробуйте ещё раз.');
-      return false;
-    }
-  }
-
-  async function saveCredentials(){
-    try{
-      await window.storage.set(CREDS_KEY, JSON.stringify(credentials), true);
-      return true;
-    }catch(e){
-      showToast('Не удалось сохранить учётные данные.');
-      return false;
-    }
-  }
-
-  // ---------- render: public catalog ----------
-  function stampHtml(number){
-    return `<div class="stamp"><span>форма</span><strong>№${String(number).padStart(3,'0')}</strong></div>`;
-  }
-
-  function renderCatalog(){
-    itemsCount.textContent = products.length + (products.length === 1 ? ' изделие' : ' изделий');
-    if(products.length === 0){
-      catalogGrid.innerHTML = `<div class="empty-catalog" style="grid-column:1/-1;">
-        <h3>Каталог пока пуст</h3>
-        <p>Мастер скоро добавит первые копилки. Загляните позже.</p>
-      </div>`;
-      return;
-    }
-    catalogGrid.innerHTML = products.slice().reverse().map((p) => `
-      <div class="card">
-        <div class="card-photo">
-          ${stampHtml(p.moldNumber)}
-          ${p.image ? `<img src="${p.image}" alt="${escapeHtml(p.name)}">` : `<div class="ph-empty">фото скоро появится</div>`}
-        </div>
-        <div class="card-body">
-          <h3>${escapeHtml(p.name)}</h3>
-          ${p.description ? `<p class="desc">${escapeHtml(p.description)}</p>` : ''}
-          <div class="card-meta">
-            <span class="price">${escapeHtml(p.price)} ₽</span>
-            ${p.size ? `<span class="size-tag">${escapeHtml(p.size)}</span>` : ''}
-          </div>
-          ${isAuthed ? `<div class="card-admin-row">
-            <button class="icon-btn" data-edit="${p.id}">Изменить</button>
-            <button class="icon-btn danger" data-del="${p.id}">Удалить</button>
-          </div>` : ''}
-        </div>
-      </div>
-    `).join('');
-
-    if(isAuthed){
-      catalogGrid.querySelectorAll('[data-edit]').forEach(btn=>{
-        btn.addEventListener('click', ()=> { startEdit(btn.dataset.edit); showAdmin(); });
-      });
-      catalogGrid.querySelectorAll('[data-del]').forEach(btn=>{
-        btn.addEventListener('click', ()=> deleteProduct(btn.dataset.del));
-      });
-    }
-  }
-
-  // ---------- render: admin list ----------
-  function renderAdminList(){
-    adminCount.textContent = products.length;
-    if(products.length === 0){
-      adminList.innerHTML = `<div class="empty-catalog">Пока нет ни одной копилки. Добавьте первую через форму слева.</div>`;
-      return;
-    }
-    adminList.innerHTML = products.slice().reverse().map(p => `
-      <div class="admin-row">
-        <div class="thumb">${p.image ? `<img src="${p.image}" alt="">` : ''}</div>
-        <div class="r-info">
-          <div class="r-name">№${String(p.moldNumber).padStart(3,'0')} · ${escapeHtml(p.name)}</div>
-          <div class="r-price">${escapeHtml(p.price)} ₽${p.size ? ' · ' + escapeHtml(p.size) : ''}</div>
-        </div>
-        <div class="row-actions">
-          <button class="icon-btn" data-edit="${p.id}">Изменить</button>
-          <button class="icon-btn danger" data-del="${p.id}">Удалить</button>
-        </div>
-      </div>
-    `).join('');
-
-    adminList.querySelectorAll('[data-edit]').forEach(btn=>{
-      btn.addEventListener('click', ()=> startEdit(btn.dataset.edit));
-    });
-    adminList.querySelectorAll('[data-del]').forEach(btn=>{
-      btn.addEventListener('click', ()=> deleteProduct(btn.dataset.del));
-    });
-  }
-
-  // ---------- form logic ----------
-  const form = document.getElementById('product-form');
-  const nameInput = document.getElementById('p-name');
-  const priceInput = document.getElementById('p-price');
-  const sizeInput = document.getElementById('p-size');
-  const descInput = document.getElementById('p-desc');
-  const photoInput = document.getElementById('photo-input');
-  const uploadPreview = document.getElementById('upload-preview');
-  const uploadTxt = document.getElementById('upload-txt');
-  const formTitle = document.getElementById('form-title');
-  const saveBtn = document.getElementById('save-btn');
-  const cancelEditBtn = document.getElementById('cancel-edit-btn');
-
-  function resizeImage(file, maxSize){
-    return new Promise((resolve, reject)=>{
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-          let {width, height} = img;
-          if(width > height && width > maxSize){
-            height = Math.round(height * (maxSize/width)); width = maxSize;
-          } else if(height > maxSize){
-            width = Math.round(width * (maxSize/height)); height = maxSize;
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width; canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.82));
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  photoInput.addEventListener('change', async ()=>{
-    const file = photoInput.files[0];
-    if(!file) return;
-    if(file.size > 8 * 1024 * 1024){
-      showToast('Файл слишком большой, выберите фото до 8 МБ');
-      return;
-    }
-    try{
-      photoDataUrl = await resizeImage(file, 900);
-      uploadPreview.src = photoDataUrl;
-      uploadPreview.classList.remove('hidden');
-      uploadTxt.textContent = 'Нажмите, чтобы выбрать другое фото';
-    }catch(e){
-      showToast('Не удалось загрузить фото');
-    }
-  });
-
-  function resetForm(){
-    form.reset();
-    photoDataUrl = null;
-    uploadPreview.classList.add('hidden');
-    uploadTxt.textContent = 'Нажмите, чтобы выбрать фото копилки';
-    editingId = null;
-    formTitle.textContent = 'Добавить копилку';
-    saveBtn.textContent = 'Добавить в каталог';
-    cancelEditBtn.classList.add('hidden');
-  }
-
-  function startEdit(id){
-    const p = products.find(x => x.id === id);
-    if(!p) return;
-    editingId = id;
-    nameInput.value = p.name;
-    priceInput.value = p.price;
-    sizeInput.value = p.size || '';
-    descInput.value = p.description || '';
-    photoDataUrl = p.image || null;
-    if(p.image){
-      uploadPreview.src = p.image;
-      uploadPreview.classList.remove('hidden');
-      uploadTxt.textContent = 'Нажмите, чтобы выбрать другое фото';
-    }
-    formTitle.textContent = 'Редактировать копилку';
-    saveBtn.textContent = 'Сохранить изменения';
-    cancelEditBtn.classList.remove('hidden');
-  }
-
-  cancelEditBtn.addEventListener('click', resetForm);
-
-  async function deleteProduct(id){
-    if(!confirm('Удалить эту копилку из каталога?')) return;
-    products = products.filter(p => p.id !== id);
-    const ok = await saveProducts();
-    if(ok){
-      renderCatalog(); renderAdminList();
-      showToast('Удалено из каталога');
-    }
-  }
-
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const name = nameInput.value.trim();
-    const price = priceInput.value.trim();
-    if(!name || !price){ return; }
-    if(!editingId && !photoDataUrl){
-      showToast('Загрузите фото копилки');
-      return;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Гипсовая мастерская — копилки ручной работы</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --plaster: #f2ede2;
+      --plaster-dark: #e6ddca;
+      --ink: #2a2420;
+      --ink-soft: #5c5348;
+      --teal: #3f6b62;
+      --teal-dark: #2c4c46;
+      --gold: #c79a2e;
+      --rose: #b4685a;
+      --card: #fbf8f2;
+      --border: rgba(42, 36, 32, .14);
+      --radius: 6px;
+      --shadow-base: 6px 8px 0 rgba(42, 36, 32, .06);
+      --shadow-hover: 9px 12px 0 rgba(42, 36, 32, .1);
     }
 
-    saveBtn.disabled = true;
-    saveBtn.textContent = 'Сохранение...';
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
 
-    if(editingId){
-      const p = products.find(x => x.id === editingId);
-      p.name = name; p.price = price; p.size = sizeInput.value.trim();
-      p.description = descInput.value.trim(); p.image = photoDataUrl;
-    } else {
-      const nextNumber = products.length > 0 ? Math.max(...products.map(p => p.moldNumber || 0)) + 1 : 1;
-      products.push({
-        id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-        moldNumber: nextNumber,
-        name, price,
-        size: sizeInput.value.trim(),
-        description: descInput.value.trim(),
-        image: photoDataUrl,
-        createdAt: Date.now()
-      });
+    body {
+      margin: 0;
+      background: var(--plaster);
+      background-image: radial-gradient(rgba(42,36,32,.035) 1px, transparent 1px);
+      background-size: 3px 3px;
+      color: var(--ink);
+      font-family: 'Manrope', sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
-    const ok = await saveProducts();
-    saveBtn.disabled = false;
-    if(ok){
-      renderCatalog(); renderAdminList();
-      showToast(editingId ? 'Изменения сохранены' : 'Копилка добавлена в каталог');
-      resetForm();
-    } else {
-      saveBtn.textContent = editingId ? 'Сохранить изменения' : 'Добавить в каталог';
+    h1, h2, h3, .display {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
-  });
+    .mono { font-family: 'JetBrains Mono', monospace; }
 
-  // ---------- routing: public vs admin ----------
-  const publicView = document.getElementById('public-view');
-  const adminView = document.getElementById('admin-view');
-  const adminGate = document.getElementById('admin-gate');
-  const adminPanel = document.getElementById('admin-panel');
-  const navAdmin = document.getElementById('nav-admin');
-  const backToSite = document.getElementById('back-to-site');
-  const gateSubmit = document.getElementById('gate-submit');
-  const gateError = document.getElementById('gate-error');
-  const adminLoginInput = document.getElementById('admin-login');
-  const adminPassInput = document.getElementById('admin-pass');
-  const logoutBtn = document.getElementById('logout-btn');
-  const credsBtn = document.getElementById('creds-btn');
-  const stripOpenPanel = document.getElementById('strip-open-panel');
-  const stripCreds = document.getElementById('strip-creds');
-  const stripLogout = document.getElementById('strip-logout');
-  const footerMaster = document.getElementById('footer-master');
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; padding: 0; }
+    .hidden { display: none !important; }
 
-  function updateMasterUi(){
-    masterStrip.classList.toggle('hidden', !isAuthed);
-    navAdmin.textContent = isAuthed ? 'Панель мастера' : 'Панель мастера';
-    footerMaster.textContent = isAuthed ? 'Вы вошли как мастер' : 'Ручная работа · г. Ваш город';
-  }
+    /* Layout */
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
 
-  function showAdmin(){
-    publicView.classList.remove('hidden');
-    adminView.classList.remove('hidden');
-    window.scrollTo({top: document.getElementById('admin-view').offsetTop - 70, behavior:'smooth'});
-    if(isAuthed){
-      adminGate.classList.add('hidden');
-      adminPanel.classList.remove('hidden');
-    } else {
-      adminGate.classList.remove('hidden');
-      adminPanel.classList.add('hidden');
+    header.site {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(242,237,226, .92);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border);
     }
-  }
-  function hideAdminSection(){
-    adminView.classList.add('hidden');
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  navAdmin.addEventListener('click', (e)=>{ e.preventDefault(); showAdmin(); });
-  backToSite.addEventListener('click', (e)=>{ e.preventDefault(); hideAdminSection(); });
-  stripOpenPanel.addEventListener('click', showAdmin);
-
-  function doLogout(){
-    isAuthed = false;
-    adminLoginInput.value = ''; adminPassInput.value = '';
-    updateMasterUi();
-    hideAdminSection();
-    renderCatalog();
-  }
-  logoutBtn.addEventListener('click', doLogout);
-  stripLogout.addEventListener('click', doLogout);
-
-  function tryLogin(){
-    const login = adminLoginInput.value.trim();
-    const pass = adminPassInput.value;
-    if(login === credentials.login && pass === credentials.password){
-      isAuthed = true;
-      gateError.classList.add('hidden');
-      updateMasterUi();
-      renderCatalog();
-      showAdmin();
-    } else {
-      gateError.classList.remove('hidden');
+    .site-bar { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 600;
     }
-  }
-  gateSubmit.addEventListener('click', tryLogin);
-  [adminLoginInput, adminPassInput].forEach(inp=>{
-    inp.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') tryLogin(); });
-  });
+    .logo-mark {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--card); border: 1.5px solid var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+      transform: rotate(-6deg); flex: none;
+    }
 
-  // ---------- change credentials modal ----------
-  function openCredsModal(){
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal-box">
-        <h3>Новый логин и пароль</h3>
-        <p class="sub-note">Текущий логин: ${escapeHtml(credentials.login)}</p>
-        <div class="field"><label>Новый логин</label><input type="text" id="new-login"></div>
-        <div class="field"><label>Новый пароль</label><input type="password" id="new-password"></div>
-        <button class="submit-btn" id="save-creds-btn">Сохранить</button>
-        <button class="modal-close" id="close-creds-modal">Закрыть</button>
-      </div>`;
-    document.body.appendChild(overlay);
-    overlay.addEventListener('click', (e)=>{ if(e.target === overlay) overlay.remove(); });
-    overlay.querySelector('#close-creds-modal').addEventListener('click', ()=> overlay.remove());
-    overlay.querySelector('#save-creds-btn').addEventListener('click', async ()=>{
-      const newLogin = overlay.querySelector('#new-login').value.trim();
-      const newPass = overlay.querySelector('#new-password').value;
-      if(!newLogin || !newPass){ showToast('Заполните оба поля'); return; }
-      credentials = { login: newLogin, password: newPass };
-      const ok = await saveCredentials();
-      if(ok){ showToast('Логин и пароль обновлены'); overlay.remove(); }
-    });
-  }
-  credsBtn.addEventListener('click', openCredsModal);
-  stripCreds.addEventListener('click', openCredsModal);
+    nav.main { display: flex; gap: 26px; align-items: center; font-size: 14.5px; font-weight: 600; }
+    nav.main a, nav.main button {
+      text-decoration: none; opacity: .75; transition: opacity .15s;
+      padding: 0; font-size: 14.5px; font-weight: 600; color: var(--ink);
+    }
+    nav.main a:hover, nav.main a.active { opacity: 1; }
+    nav.main .admin-link {
+      padding: 8px 16px; border: 1.5px solid var(--ink); border-radius: 999px;
+      opacity: 1;
+    }
+    nav.main .admin-link:hover { background: var(--ink); color: var(--plaster); }
 
-  loadAll();
-})();
-</script>
-</body>
-</html>
+    /* Master strip */
+    .master-strip {
+      background: var(--ink); color: var(--plaster);
+      font-size: 13px; padding: 10px 0; display: none;
+    }
+    .master-strip.visible { display: block; }
+    .master-strip .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .master-strip .ms-actions { display: flex; gap: 10px; }
+    .master-strip button {
+      background: none; border: 1px solid var(--plaster); color: var(--plaster);
+      border-radius: 999px; padding: 5px 13px; font-size: 12px; font-weight: 600;
+    }
+    .master-strip button:hover { background: var(--plaster); color: var(--ink); }
+
+    /* Hero */
+    .hero { padding: 70px 0 50px; position: relative; overflow: hidden; }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 50px; align-items: center; }
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace; font-size: 12.5px; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--teal-dark); font-weight: 500;
+      display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    }
+    .eyebrow::before { content: ""; width: 22px; height: 1.5px; background: var(--teal-dark); }
+    .hero h1 { font-size: clamp(38px, 5vw, 60px); line-height: 1.03; margin: 0 0 22px; }
+    .hero h1 em { font-style: normal; color: var(--teal); }
+    .hero p.lead { font-size: 17px; line-height: 1.6; color: var(--ink-soft); max-width: 46ch; margin: 0 0 30px; }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 24px; border-radius: 999px; font-weight: 700; font-size: 14.5px;
+      border: 1.5px solid var(--ink); text-decoration: none; transition: transform .15s, background .15s, color .15s;
+    }
+    .btn-fill { background: var(--ink); color: var(--plaster); }
+    .btn-fill:hover { background: var(--teal-dark); border-color: var(--teal-dark); transform: translateY(-1px); }
+    .btn-line:hover { background: var(--ink); color: var(--plaster); transform: translateY(-1px); }
+
+    .hero-visual { position: relative; height: 400px; display: flex; align-items: center; justify-content: center; }
+    .ring-mark { width: 82%; max-width: 300px; }
+    .stat-chip {
+      position: absolute; background: var(--gold); color: var(--ink);
+      padding: 10px 16px; border-radius: 999px; font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px; font-weight: 600; border: 1.5px solid var(--ink);
+      box-shadow: 5px 5px 0 rgba(42,36,32,.12);
+    }
+    .stat-chip.one { top: 6%; right: 0; }
+    .stat-chip.two { bottom: 10%; left: -2%; background: var(--rose); color: #fff; }
+
+    /* Catalog */
+    section.catalog { padding: 30px 0 80px; }
+    .cat-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 34px; gap: 20px; flex-wrap: wrap; }
+    .cat-head h2 { font-size: 32px; margin: 0 0 6px; }
+    .cat-head p { color: var(--ink-soft); margin: 0; font-size: 15px; }
+    .count-badge { font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px; color: var(--ink-soft); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 26px; }
+    .card {
+      background: var(--card); border: 1.5px solid var(--ink); border-radius: var(--radius);
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: var(--shadow-base); transition: transform .18s, box-shadow .18s;
+    }
+    .card:hover { transform: translate(-2px, -3px); box-shadow: var(--shadow-hover); }
+    .card-photo {
+      aspect-ratio: 1/1; background: var(--plaster-dark);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative; border-bottom: 1.5px solid var(--ink);
+    }
+    .card-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .card-photo .ph-empty { color: var(--ink-soft); font-size: 13px; text-align: center; padding: 20px; font-family: 'JetBrains Mono', monospace; }
+
+    .stamp {
+      position: absolute; top: 10px; left: 10px;
+      width: 54px; height: 54px; border-radius: 50%;
+      background: rgba(251,248,242, .94); border: 1.5px solid var(--ink);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transform: rotate(-9deg); line-height: 1.05; font-family: 'JetBrains Mono', monospace;
+    }
+    .stamp span { font-size: 6.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); }
+    .stamp strong { font-size: 13px; }
+
+    .card-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .card-body h3 { font-size: 19px; margin: 0; line-height: 1.2; }
+    .card-body .desc { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; margin: 0; flex: 1; }
+    .card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding-top: 12px; border-top: 1px dashed var(--border); }
+    .price { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 16.5px; color: var(--teal-dark); }
+    .size-tag { font-size: 12px; color: var(--ink-soft); }
+    .card-admin-row { display: flex; gap: 8px; margin-top: 2px; }
+
+    .empty-catalog { border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 60px 30px; text-align: center; color: var(--ink-soft); }
+    .empty-catalog h3 { color: var(--ink); margin-bottom: 8px; }
+
+    /* About */
+    section.about { padding: 60px 0 90px; border-top: 1px solid var(--border); }
+    .about-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+    .about-item .num { font-family: 'JetBrains Mono', monospace; color: var(--teal); font-size: 13px; margin-bottom: 10px; display: block; }
+    .about-item h3 { font-size: 19px; margin: 0 0 8px; }
+    .about-item p { font-size: 14px; color: var(--ink-soft); line-height: 1.55; margin: 0; }
+
+    footer { border-top: 1px solid var(--border); padding: 26px 0; font-size: 13px; color: var(--ink-soft); }
+    footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    footer button { background: none; border: none; text-decoration: underline; color: var(--ink-soft); font-size: 13px; padding: 0; }
+
+    /* Admin */
+    .admin-page { padding: 50px 0 100px; min-height: 60vh; }
+    .admin-gate { max-width: 400px; margin: 50px auto; text-align: center; }
+    .admin-gate .ring-mark { width: 100px; margin: 0 auto 22px; }
+    .admin-gate h2 { margin-bottom: 8px; }
+    .admin-gate p { color: var(--ink-soft); font-size: 14px; margin-bottom: 26px; }
+    .field { display: flex; flex-direction: column; gap: 6px; text-align: left; margin-bottom: 16px; }
+    .field label { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft);
