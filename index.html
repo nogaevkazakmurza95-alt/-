@@ -26,7 +26,6 @@
             line-height: 1.6;
         }
 
-        /* Шапка сайта */
         header {
             background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
             color: white;
@@ -47,7 +46,6 @@
             opacity: 0.9;
         }
 
-        /* Контейнер каталога */
         .container {
             max-width: 1200px;
             margin: 2rem auto;
@@ -72,14 +70,12 @@
             border-radius: 2px;
         }
 
-        /* Сетка товаров */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 2rem;
         }
 
-        /* Карточка товара */
         .card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -97,9 +93,8 @@
 
         .card-img-wrapper {
             position: relative;
-            padding-top: 100%; /* Квадратное соотношение */
+            padding-top: 100%;
             background-color: #fff;
-            cursor: pointer;
         }
 
         .card-img-wrapper img {
@@ -133,7 +128,6 @@
             flex-grow: 1;
         }
 
-        /* Кнопка действия */
         .btn {
             display: inline-block;
             width: 100%;
@@ -146,14 +140,12 @@
             font-weight: 600;
             transition: background 0.2s ease;
             border: none;
-            cursor: pointer;
         }
 
         .btn:hover {
             background-color: var(--primary-color);
         }
 
-        /* Подвал */
         footer {
             background-color: #1a1a1a;
             color: #ccc;
@@ -161,21 +153,15 @@
             padding: 2rem 1rem;
             margin-top: 4rem;
         }
-
-        footer p {
-            font-size: 0.9rem;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Шапка сайта -->
     <header>
         <h1>Гипс Хас Г.Н.</h1>
         <p>Авторские гипсовые копилки и элементы декора ручной работы</p>
     </header>
 
-    <!-- Основной контент -->
     <main class="container">
         <h2 class="section-title">Каталог изделий</h2>
 
@@ -184,94 +170,80 @@
             <!-- Медвежонок -->
             <div class="card">
                 <div class="card-img-wrapper">
-                    <img src="watermarked_img_6995868080557996320.png" alt="Копилка Медвежонок">
+                    <img src="IMG_1801.png" alt="Копилка Медвежонок">
                 </div>
                 <div class="card-content">
                     <h3 class="card-title">Копилка «Медвежонок»</h3>
-                    <p class="card-desc">Фигурная гипсовая копилка с малиновыми акцентами и прорезью для монет сзади.</p>
+                    <p class="card-desc">Фигурная гипсовая копилка с детализированной текстурой шерсти.</p>
                     <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Медвежонок" class="btn" target="_blank">Заказать</a>
                 </div>
             </div>
 
-            <!-- Бочка -->
+            <!-- Сундучок -->
             <div class="card">
                 <div class="card-img-wrapper">
-                    <img src="watermarked_img_15557897321177331066.png" alt="Кашпо-бочка со звездой">
+                    <img src="IMG_1803.jpeg" alt="Сундучок">
                 </div>
                 <div class="card-content">
-                    <h3 class="card-title">Кашпо «Бочка со звездой»</h3>
-                    <p class="card-desc">Декоративное гипсовое кашпо в виде деревянной бочки с золотой звездой.</p>
-                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20кашпо%20Бочка" class="btn" target="_blank">Заказать</a>
+                    <h3 class="card-title">Копилка «Сундучок»</h3>
+                    <p class="card-desc">Декоративный сундучок с золотыми акцентами и заклепками.</p>
+                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Сундучок" class="btn" target="_blank">Заказать</a>
                 </div>
             </div>
 
-            <!-- Котик -->
+            <!-- Котёнок -->
             <div class="card">
                 <div class="card-img-wrapper">
-                    <img src="watermarked_img_7808518147123229564.png" alt="Копилка Котёнок">
+                    <img src="IMG_1805.png" alt="Копилка Котёнок">
                 </div>
                 <div class="card-content">
                     <h3 class="card-title">Копилка «Котёнок»</h3>
-                    <p class="card-desc">Милый котёнок с поднятой лапкой и текстурой шерсти из высокопрочного гипса.</p>
+                    <p class="card-desc">Милый котёнок с поднятой лапкой из высокопрочного гипса.</p>
                     <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Котёнок" class="btn" target="_blank">Заказать</a>
                 </div>
             </div>
 
-            <!-- Лисичка Розовая -->
+            <!-- Лисичка -->
             <div class="card">
                 <div class="card-img-wrapper">
-                    <img src="watermarked_img_2946089050751525831.png" alt="Копилка Лисичка Розовая">
+                    <img src="IMG_1807.png" alt="Копилка Лисичка">
                 </div>
                 <div class="card-content">
-                    <h3 class="card-title">Копилка «Лисичка Розовая»</h3>
-                    <p class="card-desc">Яркая гипсовая фигурка лисы в розово-бордовых тонах с пушистым хвостом.</p>
-                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Лисичку%20Розовую" class="btn" target="_blank">Заказать</a>
+                    <h3 class="card-title">Копилка «Лисичка»</h3>
+                    <p class="card-desc">Красочная гипсовая фигурка лисы с пышным хвостом.</p>
+                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Лисичку" class="btn" target="_blank">Заказать</a>
                 </div>
             </div>
 
-            <!-- Лисичка Серая -->
+            <!-- Кролик -->
             <div class="card">
                 <div class="card-img-wrapper">
-                    <img src="watermarked_img_6180353733498361811.png" alt="Копилка Лисичка Серая">
+                    <img src="IMG_1810.png" alt="Копилка Кролик">
                 </div>
                 <div class="card-content">
-                    <h3 class="card-title">Копилка «Лисичка Серая»</h3>
-                    <p class="card-desc">Классическая лисичка в серых градиентных оттенках с детальной прорисовкой.</p>
-                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Лисичку%20Серую" class="btn" target="_blank">Заказать</a>
+                    <h3 class="card-title">Копилка «Кролик»</h3>
+                    <p class="card-desc">Декоративная фигурка кролика ручной раскраски.</p>
+                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Кролика" class="btn" target="_blank">Заказать</a>
                 </div>
             </div>
 
-            <!-- Кролик Серый -->
+            <!-- Кашпо Бочка -->
             <div class="card">
                 <div class="card-img-wrapper">
-                    <img src="watermarked_img_11886306659519885971.png" alt="Копилка Кролик Серый">
+                    <img src="IMG_1812.png" alt="Кашпо Бочка">
                 </div>
                 <div class="card-content">
-                    <h3 class="card-title">Копилка «Кролик Серый»</h3>
-                    <p class="card-desc">Декоративный серо-коричневый кролик из гипса с глянцевой защитной покрышкой.</p>
-                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Кролика%20Серого" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <!-- Кролик Пятнистый -->
-            <div class="card">
-                <div class="card-img-wrapper">
-                    <img src="watermarked_img_12184199869425459979.png" alt="Копилка Кролик Пятнистый">
-                </div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка «Кролик Пятнистый»</h3>
-                    <p class="card-desc">Оригинальный кролик в черно-белое пятнышко ручной раскраски.</p>
-                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Кролика%20Пятнистого" class="btn" target="_blank">Заказать</a>
+                    <h3 class="card-title">Кашпо «Бочка»</h3>
+                    <p class="card-desc">Декоративное гипсовое кашпо для интерьера и растений.</p>
+                    <a href="https://wa.me/70000000000?text=Здравствуйте!%20Хочу%20заказать%20Кашпо%20Бочка" class="btn" target="_blank">Заказать</a>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <!-- Подвал -->
     <footer>
         <p>&copy; 2026 Гипс Хас Г.Н. Все права защищены.</p>
-        <p>Изготовление и ручная роспись гипсовых изделий.</p>
     </footer>
 
 </body>
