@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Гипс Хас Г.Н. — Каталог изделий ручной работы</title>
+    <title>Гипс Хас Г.Н. — Катало изделий ручной работы</title>
     <style>
         :root {
             --primary-color: #4a235a;
@@ -11,6 +11,7 @@
             --bg-color: #f8f9fa;
             --card-bg: #ffffff;
             --text-color: #2c3e50;
+            --danger-color: #e74c3c;
         }
 
         * {
@@ -30,12 +31,13 @@
             background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
             color: white;
             text-align: center;
-            padding: 3rem 1rem;
+            padding: 2.5rem 1rem;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            position: relative;
         }
 
         header h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             letter-spacing: 2px;
             margin-bottom: 0.5rem;
             text-transform: uppercase;
@@ -46,10 +48,82 @@
             opacity: 0.9;
         }
 
+        .admin-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .admin-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
         .container {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
+        }
+
+        /* Админ-панель */
+        .admin-panel {
+            display: none;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 3rem;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .admin-panel h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-color);
         }
 
         .section-title {
@@ -70,6 +144,7 @@
             border-radius: 2px;
         }
 
+        /* Сетка каталога */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -94,7 +169,7 @@
         .card-img-wrapper {
             position: relative;
             padding-top: 100%;
-            background-color: #fff;
+            background-color: #f8f9fa;
         }
 
         .card-img-wrapper img {
@@ -105,6 +180,22 @@
             height: 100%;
             object-fit: contain;
             padding: 10px;
+        }
+
+        .no-photo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a4b0be;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 1rem;
+            background: #eee;
         }
 
         .card-content {
@@ -140,6 +231,15 @@
             background-color: var(--primary-color);
         }
 
+        .delete-btn {
+            background-color: var(--danger-color);
+            margin-top: 0.5rem;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
         footer {
             background-color: #1a1a1a;
             color: #ccc;
@@ -154,163 +254,128 @@
     <header>
         <h1>Гипс Хас Г.Н.</h1>
         <p>Изделия и копилки из гипса ручной работы</p>
+        <button class="admin-toggle-btn" onclick="toggleAdmin()">⚙️ Админ-панель</button>
     </header>
 
     <main class="container">
+
+        <!-- АДМИН-ПАНЕЛЬ -->
+        <div id="adminPanel" class="admin-panel">
+            <h2>Добавить новый товар</h2>
+            <form id="addProductForm" onsubmit="addProduct(event)">
+                <div class="form-group">
+                    <label for="productTitle">Название товара:</label>
+                    <input type="text" id="productTitle" required placeholder="Например: Копилка медведь">
+                </div>
+                <div class="form-group">
+                    <label for="productImage">Имя файла фото (например: foto1.jpg):</label>
+                    <input type="text" id="productImage" required placeholder="IMG_1900.jpeg">
+                </div>
+                <button type="submit" class="btn-primary">Опубликовать товар</button>
+            </form>
+        </div>
+
         <h2 class="section-title">Каталог изделий</h2>
 
-        <div class="grid">
-            
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1819.jpeg" alt="Копилка кролик черно-белый"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка кролик черно-белый</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20кролик%20черно-белый" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1818.jpeg" alt="Копилка кролик коричневый"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка кролик коричневый</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20кролик%20коричневый" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1817.jpeg" alt="Копилка волк серо-белый"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка волк серо-белый</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20волк%20серо-белый" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1815.jpeg" alt="Копилка лиса красно-белая"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка лиса красно-белая</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20лиса%20красно-белая" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1814.png" alt="Копилка кот серый с поднятой лапой"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка кот серый с поднятой лапой</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20кот%20серый%20с%20поднятой%20лапой" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1813.jpeg" alt="Копилка сундук желтый с черным"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка сундук желтый с черным</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20сундук%20желтый%20с%20черным" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1812.png" alt="Копилка сундук белый с коричневым"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка сундук белый с коричневым</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20сундук%20белый%20с%20коричневым" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1810.png" alt="Копилка бочонок черно-белый с полумесяцем и звездой"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка бочонок черно-белый с полумесяцем и звездой</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20бочонок%20черно-белый" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1811.png" alt="Копилка бочонок бело-коричневый с полумесяцем и звездой"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка бочонок бело-коричневый с полумесяцем и звездой</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20бочонок%20бело-коричневый" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1807.png" alt="Копилка бочонок со звездой"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка бочонок со звездой</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Копилка%20бочонок%20со%20звездой" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1801.png" alt="Копилка «Медвежонок»"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка «Медвежонок»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Медвежонок" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1805.png" alt="Копилка «Медвежонок»"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка «Медвежонок»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Медвежонок" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1803.jpeg" alt="Копилка «Сундучок»"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка «Сундучок»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Сундучок" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1820.png" alt="Копилка «Мешочек»"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка «Мешочек»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Мешочек" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1806.png" alt="Кашпо «Бочка»"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Кашпо «Бочка»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Кашпо%20Бочка" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1816.jpeg" alt="Кашпо «Бочка»"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Кашпо «Бочка»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20Кашпо%20Бочка" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1821.png" alt="Копилка «Мешочек»"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка «Мешочек»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Мешочек" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-img-wrapper"><img src="IMG_1822.png" alt="Копилка сундук"></div>
-                <div class="card-content">
-                    <h3 class="card-title">Копилка «Сундучок»</h3>
-                    <a href="https://wa.me/789285260401?text=Здравствуйте!%20Хочу%20заказать%20копилку%20Сундучок" class="btn" target="_blank">Заказать</a>
-                </div>
-            </div>
-
-        </div>
+        <!-- СЕТКА ТОВАРОВ -->
+        <div class="grid" id="catalog-grid"></div>
     </main>
 
     <footer>
         <p>&copy; 2026 Гипс Хас Г.Н.</p>
     </footer>
 
+    <script>
+        // Четкий базовый список из 18 товаров с правильными именами файлов и названий
+        let defaultProducts = [
+            { id: 1, title: "Копилка кролик черно-белый", image: "IMG_1819.jpeg" },
+            { id: 2, title: "Копилка кролик коричневый", image: "IMG_1818.jpeg" },
+            { id: 3, title: "Копилка волк серо-белый", image: "IMG_1817.jpeg" },
+            { id: 4, title: "Копилка лиса красно-белая", image: "IMG_1815.jpeg" },
+            { id: 5, title: "Копилка кот серый с поднятой лапой", image: "IMG_1814.png" },
+            { id: 6, title: "Копилка сундук желтый с черным", image: "IMG_1813.jpeg" },
+            { id: 7, title: "Копилка сундук белый с коричневым", image: "IMG_1812.png" },
+            { id: 8, title: "Копилка бочонок черно-белый с полумесяцем и звездой", image: "IMG_1810.png" },
+            { id: 9, title: "Копилка бочонок бело-коричневый с полумесяцем и звездой", image: "IMG_1811.png" },
+            { id: 10, title: "Копилка бочонок со звездой", image: "IMG_1807.png" },
+            { id: 11, title: "Копилка «Медвежонок»", image: "IMG_1801.png" },
+            { id: 12, title: "Копилка «Медвежонок»", image: "IMG_1805.png" },
+            { id: 13, title: "Копилка «Сундучок»", image: "IMG_1803.jpeg" },
+            { id: 14, title: "Копилка «Мешочек»", image: "IMG_1820.png" },
+            { id: 15, title: "Кашпо «Бочка»", image: "IMG_1806.png" },
+            { id: 16, title: "Кашпо «Бочка»", image: "IMG_1816.jpeg" },
+            { id: 17, title: "Копилка «Мешочек»", image: "IMG_1821.png" },
+            { id: 18, title: "Копилка «Сундучок»", image: "IMG_1822.png" }
+        ];
+
+        let products = JSON.parse(localStorage.getItem('gips_products')) || defaultProducts;
+
+        function toggleAdmin() {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.toggle('active');
+            renderCatalog();
+        }
+
+        function addProduct(event) {
+            event.preventDefault();
+            const title = document.getElementById('productTitle').value;
+            const image = document.getElementById('productImage').value;
+
+            const newProduct = {
+                id: Date.now(),
+                title: title,
+                image: image
+            };
+
+            products.unshift(newProduct);
+            saveAndRender();
+
+            document.getElementById('productTitle').value = '';
+            document.getElementById('productImage').value = '';
+            alert('Товар успешно добавлен!');
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Удалить этот товар из каталога?')) {
+                products = products.filter(p => p.id !== id);
+                saveAndRender();
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('gips_products', JSON.stringify(products));
+            renderCatalog();
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('catalog-grid');
+            grid.innerHTML = '';
+
+            const isAdminActive = document.getElementById('adminPanel').classList.contains('active');
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const waText = encodeURIComponent(`Здравствуйте! Хочу заказать ${product.title}`);
+                const waLink = `https://wa.me/789285260401?text=${waText}`;
+
+                card.innerHTML = `
+                    <div class="card-img-wrapper">
+                        <img src="${product.image}" alt="${product.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="no-photo" style="display:none;">Фото загружается...</div>
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-title">${product.title}</h3>
+                        <a href="${waLink}" class="btn" target="_blank">Заказать</a>
+                        ${isAdminActive ? `<button class="btn delete-btn" onclick="deleteProduct(${product.id})">Удалить товар</button>` : ''}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        renderCatalog();
+    </script>
 </body>
 </html>
