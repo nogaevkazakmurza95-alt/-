@@ -1,175 +1,108 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Гипс Хас Г.Н. — Катало изделий ручной работы</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Гипс Хас Г.Н. — Каталог изделий ручной работы</title>
     <style>
-        :root {
-            --primary-color: #4a235a;
-            --accent-color: #8e44ad;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-color: #2c3e50;
-            --danger-color: #e74c3c;
-        }
-
+        /* ——— базовые сбросы и переменные ——— */
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
+        :root {
+            --primary: #4a235a;
+            --accent: #8e44ad;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
         }
 
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        /* ——— шапка ——— */
         header {
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             color: white;
             text-align: center;
-            padding: 2.5rem 1rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            position: relative;
+            padding: 2.8rem 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         header h1 {
-            font-size: 2.2rem;
+            font-size: 2.4rem;
             letter-spacing: 2px;
-            margin-bottom: 0.5rem;
+            font-weight: 600;
             text-transform: uppercase;
         }
 
         header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            font-size: 1.2rem;
+            opacity: 0.92;
+            margin-top: 0.25rem;
         }
 
-        .admin-toggle-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-
-        .admin-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.35);
-        }
-
+        /* ——— контейнер и секции ——— */
         .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        /* Админ-панель */
-        .admin-panel {
-            display: none;
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 3rem;
-        }
-
-        .admin-panel.active {
-            display: block;
-        }
-
-        .admin-panel h2 {
-            color: var(--primary-color);
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid var(--accent-color);
-            padding-bottom: 0.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-color);
+            max-width: 1240px;
+            margin: 2.5rem auto;
+            padding: 0 1.2rem;
         }
 
         .section-title {
             text-align: center;
-            margin-bottom: 2rem;
-            font-size: 1.8rem;
-            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 2.2rem;
             position: relative;
         }
 
         .section-title::after {
             content: '';
             display: block;
-            width: 60px;
-            height: 3px;
-            background: var(--accent-color);
-            margin: 0.5rem auto 0;
-            border-radius: 2px;
+            width: 70px;
+            height: 4px;
+            background: var(--accent);
+            margin: 0.6rem auto 0;
+            border-radius: 4px;
         }
 
-        /* Сетка каталога */
+        /* ——— сетка каталога ——— */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
             gap: 2rem;
         }
 
+        /* ——— карточка товара ——— */
         .card {
             background: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
             display: flex;
             flex-direction: column;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-6px);
+            box-shadow: var(--shadow);
         }
 
         .card-img-wrapper {
             position: relative;
             padding-top: 100%;
-            background-color: #f8f9fa;
+            background: #f0f2f5;
         }
 
         .card-img-wrapper img {
@@ -180,72 +113,93 @@
             height: 100%;
             object-fit: contain;
             padding: 10px;
+            transition: opacity 0.2s;
         }
 
+        /* заглушка, если фото не загрузилось */
         .no-photo {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #a4b0be;
-            font-size: 0.9rem;
+            background: #e9ecef;
+            color: #6c757d;
+            font-size: 0.95rem;
             text-align: center;
             padding: 1rem;
-            background: #eee;
+            border-radius: 12px 12px 0 0;
         }
 
         .card-content {
-            padding: 1.5rem;
+            padding: 1.4rem 1.2rem 1.5rem;
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            flex: 1;
         }
 
         .card-title {
             font-size: 1.1rem;
             font-weight: 600;
+            color: var(--primary);
             margin-bottom: 1rem;
-            color: var(--primary-color);
+            line-height: 1.4;
+            min-height: 3.2rem;
         }
 
+        /* ——— кнопка заказа ——— */
         .btn {
             display: inline-block;
             width: 100%;
             padding: 0.8rem;
-            background-color: var(--accent-color);
+            background: var(--accent);
             color: white;
             text-align: center;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 40px;
             font-weight: 600;
-            transition: background 0.2s ease;
+            font-size: 1rem;
+            transition: background 0.2s ease, transform 0.1s;
             border: none;
             margin-top: auto;
+            letter-spacing: 0.3px;
         }
 
         .btn:hover {
-            background-color: var(--primary-color);
+            background: var(--primary);
+            transform: scale(1.01);
         }
 
-        .delete-btn {
-            background-color: var(--danger-color);
-            margin-top: 0.5rem;
+        .btn:active {
+            transform: scale(0.98);
         }
 
-        .delete-btn:hover {
-            background-color: #c0392b;
-        }
-
+        /* ——— футер ——— */
         footer {
-            background-color: #1a1a1a;
-            color: #ccc;
+            background: #1a1a1a;
+            color: #bbb;
             text-align: center;
             padding: 2rem 1rem;
             margin-top: 4rem;
+            font-size: 0.95rem;
+        }
+
+        footer span {
+            opacity: 0.7;
+        }
+
+        /* ——— адаптив ——— */
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+            .grid {
+                gap: 1.2rem;
+            }
+            .card-title {
+                font-size: 1rem;
+                min-height: 2.8rem;
+            }
         }
     </style>
 </head>
@@ -254,128 +208,100 @@
     <header>
         <h1>Гипс Хас Г.Н.</h1>
         <p>Изделия и копилки из гипса ручной работы</p>
-        <button class="admin-toggle-btn" onclick="toggleAdmin()">⚙️ Админ-панель</button>
     </header>
 
     <main class="container">
-
-        <!-- АДМИН-ПАНЕЛЬ -->
-        <div id="adminPanel" class="admin-panel">
-            <h2>Добавить новый товар</h2>
-            <form id="addProductForm" onsubmit="addProduct(event)">
-                <div class="form-group">
-                    <label for="productTitle">Название товара:</label>
-                    <input type="text" id="productTitle" required placeholder="Например: Копилка медведь">
-                </div>
-                <div class="form-group">
-                    <label for="productImage">Имя файла фото (например: foto1.jpg):</label>
-                    <input type="text" id="productImage" required placeholder="IMG_1900.jpeg">
-                </div>
-                <button type="submit" class="btn-primary">Опубликовать товар</button>
-            </form>
-        </div>
-
         <h2 class="section-title">Каталог изделий</h2>
-
-        <!-- СЕТКА ТОВАРОВ -->
         <div class="grid" id="catalog-grid"></div>
     </main>
 
     <footer>
-        <p>&copy; 2026 Гипс Хас Г.Н.</p>
+        <p>&copy; 2026 Гипс Хас Г.Н. <span>· все права защищены</span></p>
     </footer>
 
     <script>
-        // Четкий базовый список из 18 товаров с правильными именами файлов и названий
-        let defaultProducts = [
-            { id: 1, title: "Копилка кролик черно-белый", image: "IMG_1819.jpeg" },
-            { id: 2, title: "Копилка кролик коричневый", image: "IMG_1818.jpeg" },
-            { id: 3, title: "Копилка волк серо-белый", image: "IMG_1817.jpeg" },
-            { id: 4, title: "Копилка лиса красно-белая", image: "IMG_1815.jpeg" },
-            { id: 5, title: "Копилка кот серый с поднятой лапой", image: "IMG_1814.png" },
-            { id: 6, title: "Копилка сундук желтый с черным", image: "IMG_1813.jpeg" },
-            { id: 7, title: "Копилка сундук белый с коричневым", image: "IMG_1812.png" },
-            { id: 8, title: "Копилка бочонок черно-белый с полумесяцем и звездой", image: "IMG_1810.png" },
-            { id: 9, title: "Копилка бочонок бело-коричневый с полумесяцем и звездой", image: "IMG_1811.png" },
-            { id: 10, title: "Копилка бочонок со звездой", image: "IMG_1807.png" },
-            { id: 11, title: "Копилка «Медвежонок»", image: "IMG_1801.png" },
-            { id: 12, title: "Копилка «Медвежонок»", image: "IMG_1805.png" },
-            { id: 13, title: "Копилка «Сундучок»", image: "IMG_1803.jpeg" },
-            { id: 14, title: "Копилка «Мешочек»", image: "IMG_1820.png" },
-            { id: 15, title: "Кашпо «Бочка»", image: "IMG_1806.png" },
-            { id: 16, title: "Кашпо «Бочка»", image: "IMG_1816.jpeg" },
-            { id: 17, title: "Копилка «Мешочек»", image: "IMG_1821.png" },
-            { id: 18, title: "Копилка «Сундучок»", image: "IMG_1822.png" }
-        ];
+        (function() {
+            // ——— ТОЧНЫЙ СПИСОК ТОВАРОВ (каждый с верным именем файла) ———
+            const PRODUCTS = [
+                { id: 1,  title: "Копилка кролик черно-белый",           image: "IMG_1819.jpeg" },
+                { id: 2,  title: "Копилка кролик коричневый",            image: "IMG_1818.jpeg" },
+                { id: 3,  title: "Копилка волк серо-белый",              image: "IMG_1817.jpeg" },
+                { id: 4,  title: "Копилка лиса красно-белая",            image: "IMG_1815.jpeg" },
+                { id: 5,  title: "Копилка кот серый с поднятой лапой",   image: "IMG_1814.png" },
+                { id: 6,  title: "Копилка сундук желтый с черным",       image: "IMG_1813.jpeg" },
+                { id: 7,  title: "Копилка сундук белый с коричневым",    image: "IMG_1812.png" },
+                { id: 8,  title: "Копилка бочонок черно-белый с полумесяцем и звездой", image: "IMG_1810.png" },
+                { id: 9,  title: "Копилка бочонок бело-коричневый с полумесяцем и звездой", image: "IMG_1811.png" },
+                { id: 10, title: "Копилка бочонок со звездой",           image: "IMG_1807.png" },
+                { id: 11, title: "Копилка «Медвежонок»",                 image: "IMG_1801.png" },
+                { id: 12, title: "Копилка «Медвежонок»",                 image: "IMG_1805.png" },
+                { id: 13, title: "Копилка «Сундучок»",                   image: "IMG_1803.jpeg" },
+                { id: 14, title: "Копилка «Мешочек»",                    image: "IMG_1820.png" },
+                { id: 15, title: "Кашпо «Бочка»",                        image: "IMG_1806.png" },
+                { id: 16, title: "Кашпо «Бочка»",                        image: "IMG_1816.jpeg" },
+                { id: 17, title: "Копилка «Мешочек»",                    image: "IMG_1821.png" },
+                { id: 18, title: "Копилка «Сундучок»",                   image: "IMG_1822.png" }
+            ];
 
-        let products = JSON.parse(localStorage.getItem('gips_products')) || defaultProducts;
+            // ——— рендер каталога ———
+            function renderCatalog() {
+                const grid = document.getElementById('catalog-grid');
+                if (!grid) return;
 
-        function toggleAdmin() {
-            const panel = document.getElementById('adminPanel');
-            panel.classList.toggle('active');
-            renderCatalog();
-        }
+                grid.innerHTML = '';
 
-        function addProduct(event) {
-            event.preventDefault();
-            const title = document.getElementById('productTitle').value;
-            const image = document.getElementById('productImage').value;
+                PRODUCTS.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
 
-            const newProduct = {
-                id: Date.now(),
-                title: title,
-                image: image
-            };
+                    // кнопка "Заказать" → WhatsApp
+                    const waText = encodeURIComponent(`Здравствуйте! Хочу заказать ${product.title}`);
+                    const waLink = `https://wa.me/789285260401?text=${waText}`;
 
-            products.unshift(newProduct);
-            saveAndRender();
+                    // блок с фото (с обработкой ошибки загрузки)
+                    const imgWrapper = document.createElement('div');
+                    imgWrapper.className = 'card-img-wrapper';
 
-            document.getElementById('productTitle').value = '';
-            document.getElementById('productImage').value = '';
-            alert('Товар успешно добавлен!');
-        }
+                    const img = document.createElement('img');
+                    img.src = product.image;
+                    img.alt = product.title;
 
-        function deleteProduct(id) {
-            if (confirm('Удалить этот товар из каталога?')) {
-                products = products.filter(p => p.id !== id);
-                saveAndRender();
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'no-photo';
+                    placeholder.textContent = '🖼️ фото загружается…';
+
+                    // если фото не загрузилось — показываем заглушку
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                        placeholder.style.display = 'flex';
+                    };
+
+                    imgWrapper.append(img, placeholder);
+
+                    // тело карточки
+                    const content = document.createElement('div');
+                    content.className = 'card-content';
+
+                    const title = document.createElement('h3');
+                    title.className = 'card-title';
+                    title.textContent = product.title;
+
+                    const btn = document.createElement('a');
+                    btn.className = 'btn';
+                    btn.href = waLink;
+                    btn.target = '_blank';
+                    btn.textContent = 'Заказать';
+
+                    content.append(title, btn);
+                    card.append(imgWrapper, content);
+                    grid.appendChild(card);
+                });
             }
-        }
 
-        function saveAndRender() {
-            localStorage.setItem('gips_products', JSON.stringify(products));
+            // ——— запуск ———
             renderCatalog();
-        }
-
-        function renderCatalog() {
-            const grid = document.getElementById('catalog-grid');
-            grid.innerHTML = '';
-
-            const isAdminActive = document.getElementById('adminPanel').classList.contains('active');
-
-            products.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const waText = encodeURIComponent(`Здравствуйте! Хочу заказать ${product.title}`);
-                const waLink = `https://wa.me/789285260401?text=${waText}`;
-
-                card.innerHTML = `
-                    <div class="card-img-wrapper">
-                        <img src="${product.image}" alt="${product.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="no-photo" style="display:none;">Фото загружается...</div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">${product.title}</h3>
-                        <a href="${waLink}" class="btn" target="_blank">Заказать</a>
-                        ${isAdminActive ? `<button class="btn delete-btn" onclick="deleteProduct(${product.id})">Удалить товар</button>` : ''}
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        renderCatalog();
+        })();
     </script>
+
 </body>
 </html>
