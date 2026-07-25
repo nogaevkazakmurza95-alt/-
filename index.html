@@ -218,26 +218,28 @@
 
     <script>
         (function() {
-            // ===== ТОЧНЫЙ СПИСОК ТОВАРОВ ПО ВАШИМ ФАЙЛАМ =====
-            // Все файлы из вашего списка: IMG_1801.png ... IMG_1819.jpeg
-            // Файлы IMG_1802.png и IMG_1804.png добавлены
+            // ===== БАЗОВАЯ ССЫЛКА НА ВАШ РЕПОЗИТОРИЙ =====
+            // Замените "nogaevkazakmurza95-alt" на ваше имя пользователя, если нужно
+            const BASE_URL = 'https://raw.githubusercontent.com/nogaevkazakmurza95-alt/main/';
+
+            // ===== ТОЧНЫЙ СПИСОК ТОВАРОВ =====
             const PRODUCTS = [
-                { id: 1,  title: "Копилка кролик черно-белый",           image: "IMG_1819.jpeg" },
-                { id: 2,  title: "Копилка кролик коричневый",            image: "IMG_1818.jpeg" },
-                { id: 3,  title: "Копилка волк серо-белый",              image: "IMG_1817.jpeg" },
-                { id: 4,  title: "Копилка лиса красно-белая",            image: "IMG_1815.jpeg" },
-                { id: 5,  title: "Копилка кот серый с поднятой лапой",   image: "IMG_1814.png" },
-                { id: 6,  title: "Копилка сундук желтый с черным",       image: "IMG_1813.jpeg" },
-                { id: 7,  title: "Копилка сундук белый с коричневым",    image: "IMG_1812.png" },
-                { id: 8,  title: "Копилка бочонок черно-белый с полумесяцем и звездой", image: "IMG_1811.png" },
-                { id: 9,  title: "Копилка бочонок бело-коричневый с полумесяцем и звездой", image: "IMG_1810.png" },
-                { id: 10, title: "Копилка бочонок со звездой",           image: "IMG_1807.png" },
-                { id: 11, title: "Кашпо «Бочка»",                        image: "IMG_1806.png" },
-                { id: 12, title: "Копилка «Медвежонок»",                 image: "IMG_1805.png" },
-                { id: 13, title: "Копилка «Медвежонок»",                 image: "IMG_1804.png" },
-                { id: 14, title: "Копилка «Сундучок»",                   image: "IMG_1803.jpeg" },
-                { id: 15, title: "Копилка «Мешочек»",                    image: "IMG_1802.png" },
-                { id: 16, title: "Копилка «Медвежонок»",                 image: "IMG_1801.png" }
+                { id: 1,  title: "Копилка кролик черно-белый",           file: "IMG_1819.jpeg" },
+                { id: 2,  title: "Копилка кролик коричневый",            file: "IMG_1818.jpeg" },
+                { id: 3,  title: "Копилка волк серо-белый",              file: "IMG_1817.jpeg" },
+                { id: 4,  title: "Копилка лиса красно-белая",            file: "IMG_1815.jpeg" },
+                { id: 5,  title: "Копилка кот серый с поднятой лапой",   file: "IMG_1814.png" },
+                { id: 6,  title: "Копилка сундук желтый с черным",       file: "IMG_1813.jpeg" },
+                { id: 7,  title: "Копилка сундук белый с коричневым",    file: "IMG_1812.png" },
+                { id: 8,  title: "Копилка бочонок черно-белый с полумесяцем и звездой", file: "IMG_1811.png" },
+                { id: 9,  title: "Копилка бочонок бело-коричневый с полумесяцем и звездой", file: "IMG_1810.png" },
+                { id: 10, title: "Копилка бочонок со звездой",           file: "IMG_1807.png" },
+                { id: 11, title: "Кашпо «Бочка»",                        file: "IMG_1806.png" },
+                { id: 12, title: "Копилка «Медвежонок»",                 file: "IMG_1805.png" },
+                { id: 13, title: "Копилка «Медвежонок»",                 file: "IMG_1804.png" },
+                { id: 14, title: "Копилка «Сундучок»",                   file: "IMG_1803.jpeg" },
+                { id: 15, title: "Копилка «Мешочек»",                    file: "IMG_1802.png" },
+                { id: 16, title: "Копилка «Медвежонок»",                 file: "IMG_1801.png" }
             ];
 
             // ===== РЕНДЕР КАТАЛОГА =====
@@ -251,6 +253,8 @@
                     const card = document.createElement('div');
                     card.className = 'card';
 
+                    const imageUrl = BASE_URL + product.file;
+
                     // Кнопка заказа в WhatsApp
                     const waText = encodeURIComponent(`Здравствуйте! Хочу заказать ${product.title}`);
                     const waLink = `https://wa.me/789285260401?text=${waText}`;
@@ -260,7 +264,7 @@
                     imgWrapper.className = 'card-img-wrapper';
 
                     const img = document.createElement('img');
-                    img.src = product.image;
+                    img.src = imageUrl;
                     img.alt = product.title;
 
                     // Заглушка, если фото не загрузилось
@@ -269,7 +273,7 @@
                     placeholder.innerHTML = `
                         <span class="icon">🖼️</span>
                         <span>Фото отсутствует</span>
-                        <span style="font-size:0.75rem;opacity:0.6;">${product.image}</span>
+                        <span style="font-size:0.75rem;opacity:0.6;">${product.file}</span>
                     `;
 
                     img.onerror = function() {
