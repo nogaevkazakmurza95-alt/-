@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Гипс Хас Г.Н. — Каталог изделий ручной работы</title>
     <style>
-        /* ——— базовые сбросы и переменные ——— */
         * {
             margin: 0;
             padding: 0;
@@ -28,7 +27,6 @@
             line-height: 1.5;
         }
 
-        /* ——— шапка ——— */
         header {
             background: linear-gradient(135deg, var(--primary), var(--accent));
             color: white;
@@ -50,7 +48,6 @@
             margin-top: 0.25rem;
         }
 
-        /* ——— контейнер и секции ——— */
         .container {
             max-width: 1240px;
             margin: 2.5rem auto;
@@ -76,14 +73,12 @@
             border-radius: 4px;
         }
 
-        /* ——— сетка каталога ——— */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
             gap: 2rem;
         }
 
-        /* ——— карточка товара ——— */
         .card {
             background: var(--card-bg);
             border-radius: 16px;
@@ -113,14 +108,13 @@
             height: 100%;
             object-fit: contain;
             padding: 10px;
-            transition: opacity 0.2s;
         }
 
-        /* заглушка, если фото не загрузилось */
         .no-photo {
             position: absolute;
             inset: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             background: #e9ecef;
@@ -129,6 +123,12 @@
             text-align: center;
             padding: 1rem;
             border-radius: 12px 12px 0 0;
+            gap: 8px;
+        }
+
+        .no-photo .icon {
+            font-size: 3rem;
+            opacity: 0.5;
         }
 
         .card-content {
@@ -147,7 +147,6 @@
             min-height: 3.2rem;
         }
 
-        /* ——— кнопка заказа ——— */
         .btn {
             display: inline-block;
             width: 100%;
@@ -174,7 +173,6 @@
             transform: scale(0.98);
         }
 
-        /* ——— футер ——— */
         footer {
             background: #1a1a1a;
             color: #bbb;
@@ -188,7 +186,6 @@
             opacity: 0.7;
         }
 
-        /* ——— адаптив ——— */
         @media (max-width: 600px) {
             header h1 {
                 font-size: 1.8rem;
@@ -221,7 +218,9 @@
 
     <script>
         (function() {
-            // ——— ТОЧНЫЙ СПИСОК ТОВАРОВ (каждый с верным именем файла) ———
+            // ===== ТОЧНЫЙ СПИСОК ТОВАРОВ ПО ВАШИМ ФАЙЛАМ =====
+            // Все файлы из вашего списка: IMG_1801.png ... IMG_1819.jpeg
+            // Файлы IMG_1802.png и IMG_1804.png добавлены
             const PRODUCTS = [
                 { id: 1,  title: "Копилка кролик черно-белый",           image: "IMG_1819.jpeg" },
                 { id: 2,  title: "Копилка кролик коричневый",            image: "IMG_1818.jpeg" },
@@ -230,20 +229,18 @@
                 { id: 5,  title: "Копилка кот серый с поднятой лапой",   image: "IMG_1814.png" },
                 { id: 6,  title: "Копилка сундук желтый с черным",       image: "IMG_1813.jpeg" },
                 { id: 7,  title: "Копилка сундук белый с коричневым",    image: "IMG_1812.png" },
-                { id: 8,  title: "Копилка бочонок черно-белый с полумесяцем и звездой", image: "IMG_1810.png" },
-                { id: 9,  title: "Копилка бочонок бело-коричневый с полумесяцем и звездой", image: "IMG_1811.png" },
+                { id: 8,  title: "Копилка бочонок черно-белый с полумесяцем и звездой", image: "IMG_1811.png" },
+                { id: 9,  title: "Копилка бочонок бело-коричневый с полумесяцем и звездой", image: "IMG_1810.png" },
                 { id: 10, title: "Копилка бочонок со звездой",           image: "IMG_1807.png" },
-                { id: 11, title: "Копилка «Медвежонок»",                 image: "IMG_1801.png" },
+                { id: 11, title: "Кашпо «Бочка»",                        image: "IMG_1806.png" },
                 { id: 12, title: "Копилка «Медвежонок»",                 image: "IMG_1805.png" },
-                { id: 13, title: "Копилка «Сундучок»",                   image: "IMG_1803.jpeg" },
-                { id: 14, title: "Копилка «Мешочек»",                    image: "IMG_1820.png" },
-                { id: 15, title: "Кашпо «Бочка»",                        image: "IMG_1806.png" },
-                { id: 16, title: "Кашпо «Бочка»",                        image: "IMG_1816.jpeg" },
-                { id: 17, title: "Копилка «Мешочек»",                    image: "IMG_1821.png" },
-                { id: 18, title: "Копилка «Сундучок»",                   image: "IMG_1822.png" }
+                { id: 13, title: "Копилка «Медвежонок»",                 image: "IMG_1804.png" },
+                { id: 14, title: "Копилка «Сундучок»",                   image: "IMG_1803.jpeg" },
+                { id: 15, title: "Копилка «Мешочек»",                    image: "IMG_1802.png" },
+                { id: 16, title: "Копилка «Медвежонок»",                 image: "IMG_1801.png" }
             ];
 
-            // ——— рендер каталога ———
+            // ===== РЕНДЕР КАТАЛОГА =====
             function renderCatalog() {
                 const grid = document.getElementById('catalog-grid');
                 if (!grid) return;
@@ -254,11 +251,11 @@
                     const card = document.createElement('div');
                     card.className = 'card';
 
-                    // кнопка "Заказать" → WhatsApp
+                    // Кнопка заказа в WhatsApp
                     const waText = encodeURIComponent(`Здравствуйте! Хочу заказать ${product.title}`);
                     const waLink = `https://wa.me/789285260401?text=${waText}`;
 
-                    // блок с фото (с обработкой ошибки загрузки)
+                    // Блок с фото
                     const imgWrapper = document.createElement('div');
                     imgWrapper.className = 'card-img-wrapper';
 
@@ -266,19 +263,27 @@
                     img.src = product.image;
                     img.alt = product.title;
 
+                    // Заглушка, если фото не загрузилось
                     const placeholder = document.createElement('div');
                     placeholder.className = 'no-photo';
-                    placeholder.textContent = '🖼️ фото загружается…';
+                    placeholder.innerHTML = `
+                        <span class="icon">🖼️</span>
+                        <span>Фото отсутствует</span>
+                        <span style="font-size:0.75rem;opacity:0.6;">${product.image}</span>
+                    `;
 
-                    // если фото не загрузилось — показываем заглушку
                     img.onerror = function() {
                         this.style.display = 'none';
                         placeholder.style.display = 'flex';
                     };
 
+                    img.onload = function() {
+                        placeholder.style.display = 'none';
+                    };
+
                     imgWrapper.append(img, placeholder);
 
-                    // тело карточки
+                    // Тело карточки
                     const content = document.createElement('div');
                     content.className = 'card-content';
 
@@ -290,7 +295,7 @@
                     btn.className = 'btn';
                     btn.href = waLink;
                     btn.target = '_blank';
-                    btn.textContent = 'Заказать';
+                    btn.textContent = '📱 Заказать';
 
                     content.append(title, btn);
                     card.append(imgWrapper, content);
@@ -298,7 +303,7 @@
                 });
             }
 
-            // ——— запуск ———
+            // ===== ЗАПУСК =====
             renderCatalog();
         })();
     </script>
